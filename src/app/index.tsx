@@ -1357,77 +1357,6 @@ export default function PossibleComplications() {
 
     const normalizedQuery = query.toLowerCase().trim();
     
-    // Early return for cholecystectomy - use preindexed data if available
-    if (normalizedQuery === 'cholecystectomy') {
-      setIsLoading(true);
-      setCurrentProcedure(query);
-      setHasSearched(true);
-      setIsInvalidProcedure(false);
-      
-      // Try to find in preindexed data first
-      const preindexedProcedure = Array.isArray(preindexedProcedures) ? preindexedProcedures.find(p => 
-        p.name.toLowerCase() === normalizedQuery
-      ) : null;
-      
-      if (preindexedProcedure && preindexedProcedure.complications) {
-        const complications = Object.values(preindexedProcedure.complications).flat();
-        const deduplicatedComplications = complications.map((comp, index) => ({
-          ...comp,
-          id: `preindexed-${Date.now()}-${index}`
-        }));
-        
-        const categorizedComplications = {
-          '1. Immediate / Intraoperative Complications': preindexedProcedure.complications['1. Immediate / Intraoperative Complications'] || [],
-          '2. Early Post-Operative Complications': preindexedProcedure.complications['2. Early Post-Operative Complications'] || [],
-          '3. Late Post-Operative Complications': preindexedProcedure.complications['3. Late Post-Operative Complications'] || []
-        };
-        
-        setComplications({
-          ...categorizedComplications,
-          citations: preindexedProcedure.citations || []
-        });
-        setSelectedItems([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Fallback to hardcoded if not in preindexed data
-      const cholecystectomyComplications = [
-        // 1. Immediate / Intraoperative Complications
-        { id: 1, name: 'Surgical Mortality / Death During Surgery', description: 'Extremely rare risk of death during gallbladder surgery due to anesthesia or surgical complications', category: 'Severe', source: 'PubMed Literature' },
-        { id: 2, name: 'Anesthetic Complications', description: 'Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias', category: 'Severe', source: 'PubMed Literature' },
-        { id: 3, name: 'Intraoperative Hemorrhage', description: 'Severe bleeding from liver or gallbladder blood vessels requiring blood transfusion', category: 'Severe', source: 'PubMed Literature' },
-        { id: 4, name: 'Unintended Visceral or Neurovascular Injury', description: 'Accidental damage to bile ducts, liver, bowel, or blood vessels during surgery', category: 'Severe', source: 'PubMed Literature' },
-        // 2. Early Post-Operative Complications (first 30 days)
-        { id: 5, name: 'Surgical Site Infection', description: 'Infection at abdominal incision or laparoscopic port sites requiring antibiotics', category: 'Severe', source: 'PubMed Literature' },
-        { id: 6, name: 'Abscess Formation', description: 'Collection of pus in abdomen requiring drainage procedures', category: 'Severe', source: 'PubMed Literature' },
-        { id: 7, name: 'Deep Vein Thrombosis (DVT)', description: 'Blood clots forming in legs due to immobility after surgery', category: 'Severe', source: 'PubMed Literature' },
-        { id: 8, name: 'Pulmonary Embolism (PE)', description: 'Blood clot traveling from legs to lungs causing breathing difficulties', category: 'Severe', source: 'PubMed Literature' },
-        { id: 9, name: 'Early Wound Dehiscence or Acute Bleeding', description: 'Wound separation or sudden bleeding requiring intervention in first 30 days', category: 'Severe', source: 'PubMed Literature' },
-        { id: 10, name: 'Post-Operative Respiratory Failure', description: 'Breathing difficulties or pneumonia after surgery due to anesthesia effects', category: 'Severe', source: 'PubMed Literature' },
-        { id: 11, name: 'Atelectasis', description: 'Partial lung collapse due to shallow breathing after surgery', category: 'Severe', source: 'PubMed Literature' },
-        // 3. Late Post-Operative Complications (months to years)
-        { id: 12, name: 'Incisional Hernia Formation', description: 'Bulge at incision site developing months to years after surgery requiring repair', category: 'Severe', source: 'PubMed Literature' },
-        { id: 13, name: 'Adhesion Bowel Obstruction', description: 'Scar tissue forming in abdomen causing bowel blockage years later', category: 'Severe', source: 'PubMed Literature' },
-        { id: 14, name: 'Chronic Pain', description: 'Long-term pain at incision sites or in right upper abdomen', category: 'Severe', source: 'PubMed Literature' },
-        { id: 15, name: 'Nerve Entrapment', description: 'Nerves trapped in scar tissue causing chronic discomfort', category: 'Severe', source: 'PubMed Literature' },
-        { id: 16, name: 'Long-Term Organ Dysfunction', description: 'Permanent changes in digestion or bowel habits after gallbladder removal', category: 'Severe', source: 'PubMed Literature' },
-        { id: 17, name: 'Recurrence or Re-operation Risks', description: 'Need for additional surgery if gallstones return or complications develop', category: 'Severe', source: 'PubMed Literature' },
-      ];
-      
-      const deduplicatedComplications = cholecystectomyComplications.map((comp, index) => ({
-        ...comp,
-        id: `cholecystectomy-${Date.now()}-${index + 1}`
-      }));
-      
-      const categorizedComplications = ensureAllTimingCategories(deduplicatedComplications);
-      
-      setComplications(categorizedComplications);
-      setSelectedItems([]);
-      setIsLoading(false);
-      return;
-    }
-
     if (!isValidSurgicalProcedure(query)) {
       setCurrentProcedure(query);
       setHasSearched(true);
@@ -1442,111 +1371,111 @@ export default function PossibleComplications() {
     setHasSearched(true);
     setIsInvalidProcedure(false);
 
-    // Search in preindexed data first with improved matching
-    let preindexedProcedure = null;
+    console.log(`Searching for procedure: ${normalizedQuery}`);
+    console.log(`Preindexed procedures available: ${Array.isArray(preindexedProcedures) ? preindexedProcedures.length : 0}`);
+    console.log(`Comprehensive database keys: ${Object.keys(comprehensiveClinicalDatabase).slice(0, 5).join(', ')}...`);
+
+    // Step 1: Try exact match in preindexedProcedures
+    let foundComplications = null;
+    let foundCitations = null;
+    
     if (Array.isArray(preindexedProcedures) && preindexedProcedures.length > 0) {
-      // Try exact match first
-      preindexedProcedure = preindexedProcedures.find(p => 
+      const exactMatch = preindexedProcedures.find(p => 
         p.name.toLowerCase() === normalizedQuery
       );
       
-      // If no exact match, try partial matches
-      if (!preindexedProcedure) {
-        preindexedProcedure = preindexedProcedures.find(p => 
-          p.name.toLowerCase().includes(normalizedQuery) ||
-          normalizedQuery.includes(p.name.toLowerCase())
-        );
+      if (exactMatch && exactMatch.complications) {
+        console.log(`✓ Found exact match in preindexedProcedures: ${exactMatch.name}`);
+        foundComplications = exactMatch.complications;
+        foundCitations = exactMatch.citations || [];
       }
     }
 
-    if (preindexedProcedure && preindexedProcedure.complications) {
-      console.log(`Found procedure in preindexed data: ${preindexedProcedure.name}`);
-      
-      const categorizedComplications = {
-        '1. Immediate / Intraoperative Complications': preindexedProcedure.complications['1. Immediate / Intraoperative Complications'] || [],
-        '2. Early Post-Operative Complications': preindexedProcedure.complications['2. Early Post-Operative Complications'] || [],
-        '3. Late Post-Operative Complications': preindexedProcedure.complications['3. Late Post-Operative Complications'] || []
-      };
-      
-      setComplications({
-        ...categorizedComplications,
-        citations: preindexedProcedure.citations || []
-      });
-      setSelectedItems([]);
-      setIsLoading(false);
-      return;
-    }
-
-    // Fallback to comprehensiveClinicalDatabase if not in preindexed data
-    let foundComplications = [];
-    let foundInDatabase = false;
-
-    // First try exact match in comprehensiveClinicalDatabase
-    if (comprehensiveClinicalDatabase[normalizedQuery]) {
+    // Step 2: If not found in preindexed, try exact match in comprehensiveClinicalDatabase
+    if (!foundComplications && comprehensiveClinicalDatabase[normalizedQuery]) {
+      console.log(`✓ Found exact match in comprehensiveClinicalDatabase: ${normalizedQuery}`);
       foundComplications = comprehensiveClinicalDatabase[normalizedQuery];
-      foundInDatabase = true;
-      console.log(`Found exact match in comprehensiveClinicalDatabase: ${normalizedQuery}`);
-    } else {
-      // Then try partial matches with better logic
+    }
+
+    // Step 3: If still not found, try partial matches in comprehensiveClinicalDatabase
+    if (!foundComplications) {
       for (const [procedure, complications] of Object.entries(comprehensiveClinicalDatabase)) {
-        // Skip cystectomy-related procedures when searching for cholecystectomy
+        // Smart partial matching with exclusions
         if (normalizedQuery.includes('cholecyst') && procedure.includes('cyst') && !procedure.includes('cholecyst')) {
-          continue;
+          continue; // Skip cystectomy when searching for cholecystectomy
         }
         
-        // Check for partial match but require at least 3 characters match
         if (procedure.includes(normalizedQuery) && normalizedQuery.length >= 3) {
+          console.log(`✓ Found partial match in comprehensiveClinicalDatabase: ${procedure}`);
           foundComplications = complications;
-          foundInDatabase = true;
-          console.log(`Found partial match in comprehensiveClinicalDatabase: ${procedure} for query: ${normalizedQuery}`);
           break;
         }
         
-        // Also check if query contains the procedure name
         if (normalizedQuery.includes(procedure) && procedure.length >= 3) {
+          console.log(`✓ Found reverse match in comprehensiveClinicalDatabase: ${procedure}`);
           foundComplications = complications;
-          foundInDatabase = true;
-          console.log(`Found reverse match in comprehensiveClinicalDatabase: ${procedure} for query: ${normalizedQuery}`);
           break;
         }
       }
     }
 
-    // Only use fallback if nothing was found in either database
-    if (!foundInDatabase || foundComplications.length === 0) {
-      console.log(`Procedure not found in any database, using fallback: ${normalizedQuery}`);
+    // Step 4: If still not found, try partial matches in preindexedProcedures
+    if (!foundComplications && Array.isArray(preindexedProcedures) && preindexedProcedures.length > 0) {
+      const partialMatch = preindexedProcedures.find(p => 
+        p.name.toLowerCase().includes(normalizedQuery) ||
+        normalizedQuery.includes(p.name.toLowerCase())
+      );
+      
+      if (partialMatch && partialMatch.complications) {
+        console.log(`✓ Found partial match in preindexedProcedures: ${partialMatch.name}`);
+        foundComplications = partialMatch.complications;
+        foundCitations = partialMatch.citations || [];
+      }
+    }
+
+    // Step 5: Final fallback to generic complications only if nothing else worked
+    if (!foundComplications) {
+      console.log(`✗ No match found in any database, using generic fallback for: ${normalizedQuery}`);
       const fallbackProfile = getFallbackProfile(query);
       foundComplications = fallbackProfile.map(comp => ({
         ...comp,
         source: 'PubMed Literature'
       }));
+    }
+
+    // Process the found complications
+    let finalComplications;
+    
+    if (foundComplications['1. Immediate / Intraoperative Complications']) {
+      // Already categorized (from preindexed data)
+      finalComplications = {
+        '1. Immediate / Intraoperative Complications': foundComplications['1. Immediate / Intraoperative Complications'] || [],
+        '2. Early Post-Operative Complications': foundComplications['2. Early Post-Operative Complications'] || [],
+        '3. Late Post-Operative Complications': foundComplications['3. Late Post-Operative Complications'] || [],
+        citations: foundCitations || []
+      };
     } else {
-      foundComplications = foundComplications.map(comp => ({
-        ...comp,
-        source: comp.source || 'PubMed Literature'
-      }));
-    }
-
-    const deduplicatedComplications = [];
-    const seenNames = new Set();
-    let uniqueIdCounter = 1;
-    
-    for (const complication of foundComplications) {
-      const normalizedName = complication.name.toLowerCase();
-      if (!seenNames.has(normalizedName)) {
-        seenNames.add(normalizedName);
-        const uniqueId = `${complication.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}-${uniqueIdCounter++}`;
-        deduplicatedComplications.push({
-          ...complication,
-          id: uniqueId
-        });
+      // Need to categorize (from comprehensive database or fallback)
+      const deduplicatedComplications = [];
+      const seenNames = new Set();
+      let uniqueIdCounter = 1;
+      
+      for (const complication of foundComplications) {
+        const normalizedName = complication.name.toLowerCase();
+        if (!seenNames.has(normalizedName)) {
+          seenNames.add(normalizedName);
+          const uniqueId = `${complication.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}-${uniqueIdCounter++}`;
+          deduplicatedComplications.push({
+            ...complication,
+            id: uniqueId
+          });
+        }
       }
+      
+      finalComplications = ensureAllTimingCategories(deduplicatedComplications);
     }
-
-    // Organize complications into the 3 timing categories with universal fallbacks
-    const categorizedComplications = ensureAllTimingCategories(deduplicatedComplications);
     
-    setComplications(categorizedComplications);
+    setComplications(finalComplications);
     setSelectedItems([]);
     setIsLoading(false);
   };
