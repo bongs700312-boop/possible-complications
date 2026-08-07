@@ -1442,12 +1442,22 @@ export default function PossibleComplications() {
     setHasSearched(true);
     setIsInvalidProcedure(false);
 
-    // Search in preindexed data first
-    const preindexedProcedure = Array.isArray(preindexedProcedures) ? preindexedProcedures.find(p => 
-      p.name.toLowerCase() === normalizedQuery || 
-      p.name.toLowerCase().includes(normalizedQuery) ||
-      normalizedQuery.includes(p.name.toLowerCase())
-    ) : null;
+    // Search in preindexed data first with improved matching
+    let preindexedProcedure = null;
+    if (Array.isArray(preindexedProcedures) && preindexedProcedures.length > 0) {
+      // Try exact match first
+      preindexedProcedure = preindexedProcedures.find(p => 
+        p.name.toLowerCase() === normalizedQuery
+      );
+      
+      // If no exact match, try partial matches
+      if (!preindexedProcedure) {
+        preindexedProcedure = preindexedProcedures.find(p => 
+          p.name.toLowerCase().includes(normalizedQuery) ||
+          normalizedQuery.includes(p.name.toLowerCase())
+        );
+      }
+    }
 
     if (preindexedProcedure && preindexedProcedure.complications) {
       console.log(`Found procedure in preindexed data: ${preindexedProcedure.name}`);
@@ -1467,27 +1477,44 @@ export default function PossibleComplications() {
       return;
     }
 
-    // Fallback to existing database if not in preindexed data
+    // Fallback to comprehensiveClinicalDatabase if not in preindexed data
     let foundComplications = [];
+    let foundInDatabase = false;
 
-    // First try exact match
+    // First try exact match in comprehensiveClinicalDatabase
     if (comprehensiveClinicalDatabase[normalizedQuery]) {
       foundComplications = comprehensiveClinicalDatabase[normalizedQuery];
+      foundInDatabase = true;
+      console.log(`Found exact match in comprehensiveClinicalDatabase: ${normalizedQuery}`);
     } else {
-      // Then try partial matches, but exclude procedures that contain "cyst" when searching for "cholecyst"
+      // Then try partial matches with better logic
       for (const [procedure, complications] of Object.entries(comprehensiveClinicalDatabase)) {
         // Skip cystectomy-related procedures when searching for cholecystectomy
         if (normalizedQuery.includes('cholecyst') && procedure.includes('cyst') && !procedure.includes('cholecyst')) {
           continue;
         }
-        if (procedure.includes(normalizedQuery) || normalizedQuery.includes(procedure)) {
+        
+        // Check for partial match but require at least 3 characters match
+        if (procedure.includes(normalizedQuery) && normalizedQuery.length >= 3) {
           foundComplications = complications;
+          foundInDatabase = true;
+          console.log(`Found partial match in comprehensiveClinicalDatabase: ${procedure} for query: ${normalizedQuery}`);
+          break;
+        }
+        
+        // Also check if query contains the procedure name
+        if (normalizedQuery.includes(procedure) && procedure.length >= 3) {
+          foundComplications = complications;
+          foundInDatabase = true;
+          console.log(`Found reverse match in comprehensiveClinicalDatabase: ${procedure} for query: ${normalizedQuery}`);
           break;
         }
       }
     }
 
-    if (foundComplications.length === 0) {
+    // Only use fallback if nothing was found in either database
+    if (!foundInDatabase || foundComplications.length === 0) {
+      console.log(`Procedure not found in any database, using fallback: ${normalizedQuery}`);
       const fallbackProfile = getFallbackProfile(query);
       foundComplications = fallbackProfile.map(comp => ({
         ...comp,
@@ -1496,7 +1523,7 @@ export default function PossibleComplications() {
     } else {
       foundComplications = foundComplications.map(comp => ({
         ...comp,
-        source: 'PubMed Literature'
+        source: comp.source || 'PubMed Literature'
       }));
     }
 
