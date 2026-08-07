@@ -1537,10 +1537,11 @@ export default function PossibleComplications() {
   };
 
   const getCategoryColor = (category) => {
-    switch (category) {
-      case 'Common': return '#4CAF50';
-      case 'Rare': return '#FF9800';
-      case 'Severe': return '#F44336';
+    const normalizedCategory = category?.toLowerCase();
+    switch (normalizedCategory) {
+      case 'common': return '#4CAF50';
+      case 'rare': return '#FF9800';
+      case 'severe': return '#F44336';
       default: return '#757575';
     }
   };
