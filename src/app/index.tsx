@@ -1537,12 +1537,16 @@ export default function PossibleComplications() {
   };
 
   const getCategoryColor = (category) => {
-    const normalizedCategory = category?.toLowerCase();
+    if (!category) return '#757575';
+    const normalizedCategory = String(category).toLowerCase().trim();
     switch (normalizedCategory) {
       case 'common': return '#4CAF50';
       case 'rare': return '#FF9800';
       case 'severe': return '#F44336';
-      default: return '#757575';
+      default: {
+        console.log('Unknown category:', category, 'normalized:', normalizedCategory);
+        return '#757575';
+      }
     }
   };
 
