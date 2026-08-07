@@ -1355,6 +1355,7 @@ export default function PossibleComplications() {
   const searchProcedure = (query) => {
     if (!query.trim()) return;
 
+    // Trim spaces and lowercase the input completely
     const normalizedQuery = query.toLowerCase().trim();
     
     if (!isValidSurgicalProcedure(query)) {
@@ -1371,71 +1372,38 @@ export default function PossibleComplications() {
     setHasSearched(true);
     setIsInvalidProcedure(false);
 
-    console.log(`Searching for procedure: ${normalizedQuery}`);
-    console.log(`Preindexed procedures available: ${Array.isArray(preindexedProcedures) ? preindexedProcedures.length : 0}`);
-    console.log(`Comprehensive database keys: ${Object.keys(comprehensiveClinicalDatabase).slice(0, 5).join(', ')}...`);
+    console.log(`Searching for procedure: "${normalizedQuery}"`);
+    console.log(`Comprehensive database keys: ${Object.keys(comprehensiveClinicalDatabase).join(', ')}`);
+    console.log(`Preindexed procedures count: ${Array.isArray(preindexedProcedures) ? preindexedProcedures.length : 0}`);
 
-    // Step 1: Try exact match in preindexedProcedures
     let foundComplications = null;
     let foundCitations = null;
-    
-    if (Array.isArray(preindexedProcedures) && preindexedProcedures.length > 0) {
-      const exactMatch = preindexedProcedures.find(p => 
-        p.name.toLowerCase() === normalizedQuery
-      );
-      
-      if (exactMatch && exactMatch.complications) {
-        console.log(`✓ Found exact match in preindexedProcedures: ${exactMatch.name}`);
-        foundComplications = exactMatch.complications;
-        foundCitations = exactMatch.citations || [];
-      }
-    }
 
-    // Step 2: If not found in preindexed, try exact match in comprehensiveClinicalDatabase
-    if (!foundComplications && comprehensiveClinicalDatabase[normalizedQuery]) {
-      console.log(`✓ Found exact match in comprehensiveClinicalDatabase: ${normalizedQuery}`);
+    // Step 1: Check comprehensiveClinicalDatabase using the lowercased string
+    if (comprehensiveClinicalDatabase[normalizedQuery]) {
+      console.log(`✓ Found exact match in comprehensiveClinicalDatabase: "${normalizedQuery}"`);
       foundComplications = comprehensiveClinicalDatabase[normalizedQuery];
     }
 
-    // Step 3: If still not found, try partial matches in comprehensiveClinicalDatabase
-    if (!foundComplications) {
-      for (const [procedure, complications] of Object.entries(comprehensiveClinicalDatabase)) {
-        // Smart partial matching with exclusions
-        if (normalizedQuery.includes('cholecyst') && procedure.includes('cyst') && !procedure.includes('cholecyst')) {
-          continue; // Skip cystectomy when searching for cholecystectomy
-        }
-        
-        if (procedure.includes(normalizedQuery) && normalizedQuery.length >= 3) {
-          console.log(`✓ Found partial match in comprehensiveClinicalDatabase: ${procedure}`);
-          foundComplications = complications;
-          break;
-        }
-        
-        if (normalizedQuery.includes(procedure) && procedure.length >= 3) {
-          console.log(`✓ Found reverse match in comprehensiveClinicalDatabase: ${procedure}`);
-          foundComplications = complications;
-          break;
-        }
-      }
-    }
-
-    // Step 4: If still not found, try partial matches in preindexedProcedures
+    // Step 2: If not found, loop through preindexedProcedures and perform case-insensitive match on .name property
     if (!foundComplications && Array.isArray(preindexedProcedures) && preindexedProcedures.length > 0) {
-      const partialMatch = preindexedProcedures.find(p => 
-        p.name.toLowerCase().includes(normalizedQuery) ||
-        normalizedQuery.includes(p.name.toLowerCase())
-      );
+      console.log(`Searching preindexedProcedures for: "${normalizedQuery}"`);
+      const preindexedMatch = preindexedProcedures.find(p => {
+        const normalizedName = p.name.toLowerCase().trim();
+        console.log(`  Checking: "${normalizedName}" == "${normalizedQuery}" ? ${normalizedName === normalizedQuery}`);
+        return normalizedName === normalizedQuery;
+      });
       
-      if (partialMatch && partialMatch.complications) {
-        console.log(`✓ Found partial match in preindexedProcedures: ${partialMatch.name}`);
-        foundComplications = partialMatch.complications;
-        foundCitations = partialMatch.citations || [];
+      if (preindexedMatch && preindexedMatch.complications) {
+        console.log(`✓ Found match in preindexedProcedures: "${preindexedMatch.name}"`);
+        foundComplications = preindexedMatch.complications;
+        foundCitations = preindexedMatch.citations || [];
       }
     }
 
-    // Step 5: Final fallback to generic complications only if nothing else worked
+    // Step 3: Only show fallback if BOTH lookups fail
     if (!foundComplications) {
-      console.log(`✗ No match found in any database, using generic fallback for: ${normalizedQuery}`);
+      console.log(`✗ No match found in either database, using generic fallback for: "${normalizedQuery}"`);
       const fallbackProfile = getFallbackProfile(query);
       foundComplications = fallbackProfile.map(comp => ({
         ...comp,
