@@ -1536,20 +1536,6 @@ export default function PossibleComplications() {
     }
   };
 
-  const getCategoryColor = (category) => {
-    if (!category) return '#757575';
-    const normalizedCategory = String(category).toLowerCase().trim();
-    switch (normalizedCategory) {
-      case 'common': return '#4CAF50';
-      case 'rare': return '#FF9800';
-      case 'severe': return '#F44336';
-      default: {
-        console.log('Unknown category:', category, 'normalized:', normalizedCategory);
-        return '#757575';
-      }
-    }
-  };
-
   const getRiskCategoryColor = (category) => {
     switch (category) {
       case '1. Immediate / Intraoperative Complications': return '#D32F2F';
@@ -2006,14 +1992,7 @@ This list is provided by your doctor to help you understand potential risks befo
                                 </View>
                               </View>
                               <View style={styles.complicationContent}>
-                                <View style={styles.complicationNameRow}>
-                                  <Text style={styles.complicationName}>{complication.name}</Text>
-                                  {complication.category && (
-                                    <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(complication.category) }]}>
-                                      <Text style={styles.badgeText}>{complication.category}</Text>
-                                    </View>
-                                  )}
-                                </View>
+                                <Text style={styles.complicationName}>{complication.name}</Text>
                                 <Text style={styles.complicationDescription}>{complication.description}</Text>
                               </View>
                             </TouchableOpacity>
@@ -2289,16 +2268,11 @@ const styles = StyleSheet.create({
   complicationContent: {
     flex: 1,
   },
-  complicationNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
   complicationName: {
     fontSize: Platform.OS === 'web' ? 14 : 13,
     fontWeight: '700',
     color: '#000000',
-    marginRight: Platform.OS === 'web' ? 8 : 6,
+    marginBottom: 4,
   },
   complicationDescription: {
     fontSize: Platform.OS === 'web' ? 14 : 12,
@@ -2349,15 +2323,5 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: Platform.OS === 'web' ? 4 : 2,
     fontStyle: 'italic',
-  },
-  categoryBadge: {
-    paddingHorizontal: Platform.OS === 'web' ? 6 : 5,
-    paddingVertical: Platform.OS === 'web' ? 2 : 1,
-    borderRadius: 3,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: Platform.OS === 'web' ? 10 : 9,
-    fontWeight: '600',
   },
 });
