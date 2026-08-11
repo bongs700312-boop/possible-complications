@@ -1347,8 +1347,6 @@ export default function PossibleComplications() {
   const [isSearchHovered, setIsSearchHovered] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
-  const [isSelectingSuggestion, setIsSelectingSuggestion] = useState(false);
-  const inputRef = useRef(null);
 
   // Note: CSV loading is now handled by preindexed data from src/data/preindexed_procedures.json
   // This useEffect can be removed or kept for future CSV fallback if needed
@@ -1358,11 +1356,6 @@ export default function PossibleComplications() {
 
   // Update suggestions when search query changes
   useEffect(() => {
-    // Don't update suggestions if we're in the middle of selecting a suggestion
-    if (isSelectingSuggestion) {
-      return;
-    }
-
     if (searchQuery.trim().length < 2) {
       setSuggestions([]);
       setShowDropdown(false);
@@ -1399,7 +1392,7 @@ export default function PossibleComplications() {
     } else {
       setShowDropdown(false);
     }
-  }, [searchQuery, isSelectingSuggestion]);
+  }, [searchQuery]);
 
   const searchProcedure = (query) => {
     if (!query.trim()) return;
@@ -1521,28 +1514,15 @@ export default function PossibleComplications() {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    // Set flag to prevent useEffect from reopening dropdown
-    setIsSelectingSuggestion(true);
-    
-    // Update search query
+    // 1. Set the text
     setSearchQuery(suggestion);
-    
-    // Clear suggestions and hide dropdown
+    // 2. Clear the dropdown states instantly
     setSuggestions([]);
     setShowDropdown(false);
     
-    // Dismiss keyboard and blur input
-    Keyboard.dismiss();
-    if (inputRef.current) {
-      inputRef.current.blur();
-    }
-    
-    // Trigger search
-    searchProcedure(suggestion);
-    
-    // Reset flag after a short delay to allow state updates to complete
+    // 3. Delay the actual search by 100ms so the text-change listener doesn't fight it
     setTimeout(() => {
-      setIsSelectingSuggestion(false);
+      searchProcedure(suggestion);
     }, 100);
   };
 
@@ -1909,7 +1889,6 @@ This list is provided by your doctor to help you understand potential risks befo
           <View style={styles.searchContainer}>
             <View style={styles.searchInputWrapper}>
             <TextInput
-              ref={inputRef}
               style={styles.searchInput}
               placeholder={Platform.OS === 'web' ? "Enter procedure name (e.g., Appendectomy, Tracheostomy, Arthroscopy)..." : "Enter valid procedure..."}
               placeholderTextColor="#999"
