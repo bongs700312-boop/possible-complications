@@ -1345,12 +1345,49 @@ export default function PossibleComplications() {
   const [isInvalidProcedure, setIsInvalidProcedure] = useState(false);
   const [hoveredAction, setHoveredAction] = useState(null);
   const [isSearchHovered, setIsSearchHovered] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
 
   // Note: CSV loading is now handled by preindexed data from src/data/preindexed_procedures.json
   // This useEffect can be removed or kept for future CSV fallback if needed
   useEffect(() => {
     console.log(`Using preindexed procedures data: ${Array.isArray(preindexedProcedures) ? preindexedProcedures.length : 0} procedures loaded`);
   }, []);
+
+  // Update suggestions when search query changes
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const normalizedQuery = searchQuery.toLowerCase().trim();
+    const allProcedures = [];
+
+    // Add procedures from comprehensiveClinicalDatabase
+    Object.keys(comprehensiveClinicalDatabase).forEach(procedure => {
+      allProcedures.push(procedure);
+    });
+
+    // Add procedures from preindexedProcedures
+    if (Array.isArray(preindexedProcedures)) {
+      preindexedProcedures.forEach(procedure => {
+        if (procedure.name && !allProcedures.includes(procedure.name)) {
+          allProcedures.push(procedure.name);
+        }
+      });
+    }
+
+    // Filter procedures that match the query
+    const filteredSuggestions = allProcedures.filter(procedure => {
+      const normalizedProcedure = procedure.toLowerCase().trim();
+      return normalizedProcedure.includes(normalizedQuery) || normalizedQuery.includes(normalizedProcedure);
+    }).slice(0, 10); // Limit to 10 suggestions
+
+    setSuggestions(filteredSuggestions);
+    setShowDropdown(filteredSuggestions.length > 0);
+  }, [searchQuery]);
 
   const searchProcedure = (query) => {
     if (!query.trim()) return;
@@ -1468,6 +1505,13 @@ export default function PossibleComplications() {
 
   const handleSearchSubmit = () => {
     searchProcedure(searchQuery);
+    setShowDropdown(false);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setSearchQuery(suggestion);
+    setShowDropdown(false);
+    searchProcedure(suggestion);
   };
 
   const toggleSelection = (id) => {
@@ -1842,6 +1886,7 @@ This list is provided by your doctor to help you understand potential risks befo
                   setComplications([]);
                   setCurrentProcedure('');
                   setIsInvalidProcedure(false);
+                  setShowDropdown(false);
                 } else {
                   setIsInvalidProcedure(false);
                 }
@@ -1864,6 +1909,23 @@ This list is provided by your doctor to help you understand potential risks befo
               <Text style={styles.searchIcon}>🔍</Text>
             </Pressable>
           </View>
+          
+          {/* Predictive dropdown */}
+          {showDropdown && suggestions.length > 0 && (
+            <View style={styles.dropdownContainer}>
+              <ScrollView style={styles.dropdownScroll} keyboardShouldPersistTaps="handled">
+                {suggestions.map((suggestion, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.dropdownItem}
+                    onPress={() => handleSuggestionClick(suggestion)}
+                  >
+                    <Text style={styles.dropdownItemText}>{suggestion}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
 
         {!hasSearched && (
@@ -2062,6 +2124,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     marginBottom: Platform.OS === 'web' ? 20 : 16,
+    position: 'relative',
   },
   searchInputWrapper: {
     flexDirection: 'row',
@@ -2072,6 +2135,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: Platform.OS === 'web' ? 12 : 10,
     paddingVertical: Platform.OS === 'web' ? 10 : 8,
+    position: 'relative',
   },
   searchInput: {
     flex: 1,
@@ -2265,5 +2329,36 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: Platform.OS === 'web' ? 4 : 2,
     fontStyle: 'italic',
+  },
+  dropdownContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+    borderRadius: 8,
+    marginTop: 4,
+    maxHeight: 200,
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    overflow: 'hidden',
+  },
+  dropdownScroll: {
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    padding: Platform.OS === 'web' ? 12 : 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  dropdownItemText: {
+    fontSize: Platform.OS === 'web' ? 14 : 13,
+    color: '#333',
   },
 });
