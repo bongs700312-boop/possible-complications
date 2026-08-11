@@ -1873,8 +1873,9 @@ This list is provided by your doctor to help you understand potential risks befo
           </View>
         </View>
 
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputWrapper}>
+        <View style={styles.searchAreaWrapper}>
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputWrapper}>
             <TextInput
               style={styles.searchInput}
               placeholder={Platform.OS === 'web' ? "Enter procedure name (e.g., Appendectomy, Tracheostomy, Arthroscopy)..." : "Enter valid procedure..."}
@@ -1910,28 +1911,29 @@ This list is provided by your doctor to help you understand potential risks befo
               <Text style={styles.searchIcon}>🔍</Text>
             </Pressable>
           </View>
-          
-          {/* Predictive dropdown */}
-          {showDropdown && suggestions.length > 0 && (
-            <View style={styles.dropdownContainer}>
-              <ScrollView 
-                style={styles.dropdownScroll} 
-                keyboardShouldPersistTaps="handled"
-                nestedScrollEnabled={true}
-              >
-                {suggestions.map((suggestion, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.dropdownItem}
-                    onPress={() => handleSuggestionClick(suggestion)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.dropdownItemText}>{suggestion}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
+        </View>
+
+        {/* Predictive dropdown - inside searchAreaWrapper for proper positioning */}
+        {showDropdown && suggestions.length > 0 && (
+          <View style={styles.dropdownContainer}>
+            <ScrollView 
+              style={styles.dropdownScroll} 
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled={true}
+            >
+              {suggestions.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.dropdownItem}
+                  onPress={() => handleSuggestionClick(suggestion)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.dropdownItemText}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
         </View>
 
         {!hasSearched && (
@@ -2130,9 +2132,13 @@ const styles = StyleSheet.create({
     fontSize: Platform.OS === 'web' ? 14 : 13,
     color: '#000',
   },
-  searchContainer: {
-    marginBottom: Platform.OS === 'web' ? 20 : 16,
+  searchAreaWrapper: {
     position: 'relative',
+    marginBottom: Platform.OS === 'web' ? 20 : 16,
+  },
+  searchContainer: {
+    position: 'relative',
+    zIndex: 1,
   },
   searchInputWrapper: {
     flexDirection: 'row',
@@ -2144,6 +2150,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Platform.OS === 'web' ? 12 : 10,
     paddingVertical: Platform.OS === 'web' ? 10 : 8,
     position: 'relative',
+    zIndex: 1,
   },
   searchInput: {
     flex: 1,
@@ -2340,16 +2347,15 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     position: 'absolute',
-    top: '100%',
+    top: 48,
     left: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E9ECEF',
     borderRadius: 8,
-    marginTop: 4,
     maxHeight: 200,
-    zIndex: 999,
+    zIndex: 9999,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -2367,6 +2373,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
     backgroundColor: '#FFFFFF',
     minHeight: Platform.OS === 'web' ? 44 : 40,
+    justifyContent: 'center',
   },
   dropdownItemText: {
     fontSize: Platform.OS === 'web' ? 14 : 13,
