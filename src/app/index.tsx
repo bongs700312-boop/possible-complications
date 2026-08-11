@@ -1516,12 +1516,16 @@ export default function PossibleComplications() {
   const handleSuggestionClick = (suggestion) => {
     // 1. Set the text
     setSearchQuery(suggestion);
+    
     // 2. Clear the dropdown states instantly
     setSuggestions([]);
     setShowDropdown(false);
     
     // 3. Delay the actual search by 100ms so the text-change listener doesn't fight it
     setTimeout(() => {
+      // Ensure dropdown is still closed before running search
+      setSuggestions([]);
+      setShowDropdown(false);
       searchProcedure(suggestion);
     }, 100);
   };
@@ -1930,7 +1934,8 @@ This list is provided by your doctor to help you understand potential risks befo
         </View>
 
         {/* Predictive dropdown - inside searchAreaWrapper for proper positioning */}
-        {showDropdown && suggestions.length > 0 && (
+        {/* Only show suggestions if we are actively typing and NOT looking at already loaded results */}
+        {showDropdown && suggestions.length > 0 && !hasSearched && (
           <View style={styles.dropdownContainer}>
             <ScrollView 
               style={styles.dropdownScroll} 
