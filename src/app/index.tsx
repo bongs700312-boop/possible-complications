@@ -2135,6 +2135,7 @@ const styles = StyleSheet.create({
   searchAreaWrapper: {
     position: 'relative',
     marginBottom: Platform.OS === 'web' ? 20 : 16,
+    zIndex: 50,
   },
   searchContainer: {
     position: 'relative',
@@ -2177,6 +2178,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Platform.OS === 'web' ? 24 : 16,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
   },
   emptyStateIcon: {
     fontSize: Platform.OS === 'web' ? 48 : 40,
@@ -2197,6 +2199,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    zIndex: 1,
   },
   scrollContent: {
     paddingBottom: Platform.OS === 'web' ? 20 : 16,
