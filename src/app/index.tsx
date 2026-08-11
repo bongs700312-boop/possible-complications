@@ -1392,14 +1392,43 @@ export default function PossibleComplications() {
       // Handle slash-separated names (e.g., "Lisfranc Fracture ORIF / Arthrodesis")
       if (normalizedName.includes('/')) {
         const parts = normalizedName.split('/').map(part => part.trim());
-        // Check if query matches any part
-        if (parts.some(part => part === normalizedQuery || part.includes(normalizedQuery) || normalizedQuery.includes(part))) {
-          return true;
+        
+        // Check if query matches any part using .includes() for flexible matching
+        for (const part of parts) {
+          // If query is a subset of the part, or part is a subset of query
+          if (part.includes(normalizedQuery) || normalizedQuery.includes(part)) {
+            return true;
+          }
+          
+          // Word-based matching: check if all query words are present in the part
+          const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 0);
+          const partWords = part.split(/\s+/).filter(w => w.length > 0);
+          
+          // If all query words are found in the part words
+          if (queryWords.every(queryWord => partWords.some(partWord => partWord.includes(queryWord)))) {
+            return true;
+          }
+          
+          // If significant portion of query words match (at least 50%)
+          const matchingWords = queryWords.filter(queryWord => 
+            partWords.some(partWord => partWord.includes(queryWord) || queryWord.includes(partWord))
+          );
+          if (matchingWords.length >= Math.ceil(queryWords.length * 0.5)) {
+            return true;
+          }
         }
       }
       
-      // Partial match
+      // Partial match for non-slash names
       if (normalizedName.includes(normalizedQuery) || normalizedQuery.includes(normalizedName)) {
+        return true;
+      }
+      
+      // Word-based matching for non-slash names
+      const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 0);
+      const nameWords = normalizedName.split(/\s+/).filter(w => w.length > 0);
+      
+      if (queryWords.every(queryWord => nameWords.some(nameWord => nameWord.includes(queryWord)))) {
         return true;
       }
       
