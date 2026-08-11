@@ -1386,7 +1386,12 @@ export default function PossibleComplications() {
     }).slice(0, 10); // Limit to 10 suggestions
 
     setSuggestions(filteredSuggestions);
-    setShowDropdown(filteredSuggestions.length > 0);
+    // Only show dropdown if we have suggestions and the dropdown isn't explicitly hidden
+    if (filteredSuggestions.length > 0) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
   }, [searchQuery]);
 
   const searchProcedure = (query) => {
@@ -1509,9 +1514,11 @@ export default function PossibleComplications() {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(suggestion);
+    // Immediately hide dropdown and clear suggestions
     setShowDropdown(false);
     setSuggestions([]);
+    // Set the search query and trigger lookup
+    setSearchQuery(suggestion);
     searchProcedure(suggestion);
   };
 
@@ -1892,6 +1899,10 @@ This list is provided by your doctor to help you understand potential risks befo
                   setShowDropdown(false);
                 } else {
                   setIsInvalidProcedure(false);
+                  // Only show dropdown if there's active typing text
+                  if (text.trim().length >= 2) {
+                    setShowDropdown(true);
+                  }
                 }
               }}
               onSubmitEditing={handleSearchSubmit}
