@@ -1511,6 +1511,7 @@ export default function PossibleComplications() {
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion);
     setShowDropdown(false);
+    setSuggestions([]);
     searchProcedure(suggestion);
   };
 
