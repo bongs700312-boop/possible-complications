@@ -1778,7 +1778,8 @@ This list is provided by your doctor to help you understand potential risks befo
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
+        <View style={styles.container}>
+          <View style={styles.header}>
           <View style={styles.headerTopRow}>
             <View style={styles.headerLeft}>
               <Text style={styles.title}>Possible Complications</Text>
@@ -1913,12 +1914,17 @@ This list is provided by your doctor to help you understand potential risks befo
           {/* Predictive dropdown */}
           {showDropdown && suggestions.length > 0 && (
             <View style={styles.dropdownContainer}>
-              <ScrollView style={styles.dropdownScroll} keyboardShouldPersistTaps="handled">
+              <ScrollView 
+                style={styles.dropdownScroll} 
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled={true}
+              >
                 {suggestions.map((suggestion, index) => (
                   <TouchableOpacity
                     key={index}
                     style={styles.dropdownItem}
                     onPress={() => handleSuggestionClick(suggestion)}
+                    activeOpacity={0.7}
                   >
                     <Text style={styles.dropdownItemText}>{suggestion}</Text>
                   </TouchableOpacity>
@@ -2028,6 +2034,7 @@ This list is provided by your doctor to help you understand potential risks befo
             )}
           </ScrollView>
         )}
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -2037,6 +2044,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+    position: 'relative',
   },
   safeArea: {
     flex: 1,
@@ -2341,21 +2349,24 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 4,
     maxHeight: 200,
-    zIndex: 1000,
-    elevation: 5,
+    zIndex: 999,
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     overflow: 'hidden',
   },
   dropdownScroll: {
     maxHeight: 200,
+    flexGrow: 0,
   },
   dropdownItem: {
     padding: Platform.OS === 'web' ? 12 : 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF',
+    minHeight: Platform.OS === 'web' ? 44 : 40,
   },
   dropdownItemText: {
     fontSize: Platform.OS === 'web' ? 14 : 13,
