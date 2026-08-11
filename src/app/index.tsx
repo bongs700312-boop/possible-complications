@@ -1530,6 +1530,26 @@ export default function PossibleComplications() {
     }, 100);
   };
 
+  const handleNewSearch = () => {
+    // Clear the search query text field
+    setSearchQuery('');
+    
+    // Clear the active procedure/results states
+    setCurrentProcedure('');
+    setHasSearched(false);
+    setIsInvalidProcedure(false);
+    setComplications({
+      '1. Immediate / Intraoperative Complications': [],
+      '2. Early Post-Operative Complications': [],
+      '3. Late Post-Operative Complications': []
+    });
+    setSelectedItems([]);
+    
+    // Reset suggestions and dropdown
+    setSuggestions([]);
+    setShowDropdown(false);
+  };
+
   const toggleSelection = (id) => {
     if (selectedItems.includes(id)) {
       setSelectedItems(selectedItems.filter(item => item !== id));
@@ -1931,6 +1951,16 @@ This list is provided by your doctor to help you understand potential risks befo
               <Text style={styles.searchIcon}>🔍</Text>
             </Pressable>
           </View>
+          
+          {/* New Search button - appears when results are showing */}
+          {hasSearched && (
+            <TouchableOpacity
+              style={styles.newSearchButton}
+              onPress={handleNewSearch}
+            >
+              <Text style={styles.newSearchButtonText}>✕ New Search</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Predictive dropdown - inside searchAreaWrapper for proper positioning */}
@@ -2193,6 +2223,21 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     fontSize: Platform.OS === 'web' ? 16 : 14,
+  },
+  newSearchButton: {
+    marginTop: Platform.OS === 'web' ? 12 : 8,
+    paddingHorizontal: Platform.OS === 'web' ? 16 : 12,
+    paddingVertical: Platform.OS === 'web' ? 8 : 6,
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  newSearchButtonText: {
+    fontSize: Platform.OS === 'web' ? 13 : 12,
+    color: '#666',
+    fontWeight: '500',
   },
   emptyState: {
     paddingVertical: Platform.OS === 'web' ? 48 : 32,
