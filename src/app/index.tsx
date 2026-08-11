@@ -1379,19 +1379,55 @@ export default function PossibleComplications() {
     let foundComplications = null;
     let foundCitations = null;
 
+    // Helper function to check if query matches a procedure name (including slash handling)
+    const matchesProcedureName = (procedureName, query) => {
+      const normalizedName = procedureName.toLowerCase().trim();
+      const normalizedQuery = query.toLowerCase().trim();
+      
+      // Exact match
+      if (normalizedName === normalizedQuery) {
+        return true;
+      }
+      
+      // Handle slash-separated names (e.g., "Lisfranc Fracture ORIF / Arthrodesis")
+      if (normalizedName.includes('/')) {
+        const parts = normalizedName.split('/').map(part => part.trim());
+        // Check if query matches any part
+        if (parts.some(part => part === normalizedQuery || part.includes(normalizedQuery) || normalizedQuery.includes(part))) {
+          return true;
+        }
+      }
+      
+      // Partial match
+      if (normalizedName.includes(normalizedQuery) || normalizedQuery.includes(normalizedName)) {
+        return true;
+      }
+      
+      return false;
+    };
+
     // Step 1: Check comprehensiveClinicalDatabase using the lowercased string
     if (comprehensiveClinicalDatabase[normalizedQuery]) {
       console.log(`✓ Found exact match in comprehensiveClinicalDatabase: "${normalizedQuery}"`);
       foundComplications = comprehensiveClinicalDatabase[normalizedQuery];
+    } else {
+      // Check for slash-separated names in comprehensive database
+      for (const [procedure, complications] of Object.entries(comprehensiveClinicalDatabase)) {
+        if (matchesProcedureName(procedure, normalizedQuery)) {
+          console.log(`✓ Found match in comprehensiveClinicalDatabase (with slash handling): "${procedure}"`);
+          foundComplications = complications;
+          break;
+        }
+      }
     }
 
     // Step 2: If not found, loop through preindexedProcedures and perform case-insensitive match on .name property
     if (!foundComplications && Array.isArray(preindexedProcedures) && preindexedProcedures.length > 0) {
       console.log(`Searching preindexedProcedures for: "${normalizedQuery}"`);
       const preindexedMatch = preindexedProcedures.find(p => {
-        const normalizedName = p.name.toLowerCase().trim();
-        console.log(`  Checking: "${normalizedName}" == "${normalizedQuery}" ? ${normalizedName === normalizedQuery}`);
-        return normalizedName === normalizedQuery;
+        const matches = matchesProcedureName(p.name, normalizedQuery);
+        console.log(`  Checking: "${p.name}" == "${normalizedQuery}" ? ${matches}`);
+        return matches;
       });
       
       if (preindexedMatch && preindexedMatch.complications) {
