@@ -148,16 +148,22 @@ const assignApprovedSource = () => {
 // Comprehensive Clinical Database with layman's explanations
 const comprehensiveClinicalDatabase = {
   'vasectomy': [
-    { id: 1, name: 'Swelling & Bruising', description: 'Mild, temporary discomfort in the scrotum area', category: 'Common', source: 'PubMed Literature' },
-    { id: 2, name: 'Incision Pain', description: 'Mild soreness while healing at the surgical site', category: 'Common', source: 'Medscape Medical Review' },
-    { id: 3, name: 'Minor Bleeding', description: 'Small amount of bleeding from the incision', category: 'Common', source: 'Medline Resource' },
-    { id: 4, name: 'Blood Clot in Scrotum (Hematoma)', description: 'A collection of blood under the skin that may need drainage', category: 'Rare', source: 'UpToDate Guidelines' },
-    { id: 5, name: 'Wound Infection', description: 'Infection at the surgical site that may need antibiotics', category: 'Rare', source: 'Mayo Clinic Clinical Reference' },
-    { id: 6, name: 'Leaking Sperm Lump (Sperm Granuloma)', description: 'A harmless small bump caused by leaking sperm', category: 'Rare', source: 'PubMed Literature' },
-    { id: 7, name: 'Ongoing Scrotal Pain', description: 'Long-term aching or discomfort in the scrotum', category: 'Rare', source: 'Medscape Medical Review' },
-    { id: 8, name: 'Unintended Pregnancy', description: 'The cut tubes rejoin on their own over time', category: 'Severe', source: 'Medline Resource' },
-    { id: 9, name: 'Severe Testicular Infection', description: 'Severe inflammation or infection of the testicle', category: 'Severe', source: 'UpToDate Guidelines' },
-    { id: 10, name: 'Testicular Shrinkage (Atrophy)', description: 'Very rare damage to blood flow causing shrinkage', category: 'Severe', source: 'Mayo Clinic Clinical Reference' },
+    // Immediate / Intraoperative Complications
+    { id: 1, name: 'Scrotal Bleeding & Bruising (Minor bleeding or localized bruising during the procedure)', description: '', category: 'Common', source: 'PubMed Literature' },
+    { id: 2, name: 'Mild Discomfort or Pain (Manageable pressure or aching during local anesthesia injection or vas isolation)', description: '', category: 'Common', source: 'Medscape Medical Review' },
+    { id: 3, name: 'Vas Deferens Injury or Difficulty (Technical difficulty locating or isolating the vas deferens tubes)', description: '', category: 'Rare', source: 'Medline Resource' },
+    { id: 4, name: 'Anesthetic Reaction (Mild reaction or temporary sensitivity to local numbing medication)', description: '', category: 'Rare', source: 'UpToDate Guidelines' },
+    // Early Post-Operative Complications
+    { id: 5, name: 'Scrotal Hematoma (A collection of blood inside the scrotum causing swelling or discomfort)', description: '', category: 'Common', source: 'Mayo Clinic Clinical Reference' },
+    { id: 6, name: 'Local Wound Infection (Minor bacterial infection or redness around the small skin puncture or incision)', description: '', category: 'Rare', source: 'PubMed Literature' },
+    { id: 7, name: 'Infection of the Epididymis (Epididymitis) (Inflammation or soreness in the coiled tube behind the testicle)', description: '', category: 'Rare', source: 'Medscape Medical Review' },
+    { id: 8, name: 'Temporary Swelling & Pain (Mild scrotal tightness or swelling managed with rest and ice packs)', description: '', category: 'Common', source: 'Medline Resource' },
+    // Late / Long-Term Complications
+    { id: 9, name: 'Post-Vasectomy Pain Syndrome (PVPS) (Rare, ongoing dull ache or discomfort in the testicles or scrotum months after surgery)', description: '', category: 'Severe', source: 'UpToDate Guidelines' },
+    { id: 10, name: 'Sperm Granuloma (A harmless, small lump caused by leaked sperm that usually resolves on its own)', description: '', category: 'Rare', source: 'Mayo Clinic Clinical Reference' },
+    { id: 11, name: 'Primary Failure or Recanalization (Unintended reconnecting of the vas deferens tubes leading to persistent sperm in semen)', description: '', category: 'Severe', source: 'PubMed Literature' },
+    { id: 12, name: 'Anti-Sperm Antibodies (The body forming immune proteins against sperm, which generally has no physical symptoms)', description: '', category: 'Rare', source: 'Medscape Medical Review' },
+    { id: 13, name: 'Emotional & Psychological Adaptation (Adjusting to permanent sterility or anxiety regarding effectiveness)', description: '', category: 'Common', source: 'Medline Resource' },
   ],
   'cataract surgery': [
     { id: 1, name: 'Cloudy Lens (Posterior Capsule Opacification)', description: 'Clouding of the lens capsule that may need laser treatment', category: 'Common', source: 'PubMed Literature' },
