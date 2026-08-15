@@ -45,7 +45,8 @@
     "preview": "npx serve dist",
     "preindex": "node ./scripts/preindex-citations.js",
     "preindex:all": "node ./scripts/preindex-citations.js",
-    "update-csv": "node ./scripts/update-csv-from-comprehensive.js"
+    "update-csv": "node ./scripts/update-csv-from-comprehensive.js",
+    "enrich-csv": "node ./scripts/enrich-csv-explanations.js"
   },
   "private": true
 }

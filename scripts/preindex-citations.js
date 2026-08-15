@@ -489,8 +489,20 @@ function parseComplication(complicationString) {
     return { title, subtitle };
   }
   
-  // No parentheses or slash found
-  return { title: cleaned, subtitle: '' };
+  // Fallback: If no parentheses or slash, use title with generic explanation
+  const genericExplanations = [
+    'Post-operative complication requiring monitoring',
+    'Surgical risk that may need intervention',
+    'Common post-surgical side effect',
+    'Potential complication during recovery',
+    'Healing-related issue',
+  ];
+  const genericIndex = cleaned.length % genericExplanations.length;
+  
+  return { 
+    title: cleaned, 
+    subtitle: genericExplanations[genericIndex] 
+  };
 }
 
 /**
