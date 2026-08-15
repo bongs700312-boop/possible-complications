@@ -1478,12 +1478,28 @@ export default function PossibleComplications() {
     if (comprehensiveClinicalDatabase[normalizedQuery]) {
       console.log(`✓ Found exact match in comprehensiveClinicalDatabase: "${normalizedQuery}"`);
       foundComplications = comprehensiveClinicalDatabase[normalizedQuery];
+      // Add PubMed search citation for comprehensive database matches
+      foundCitations = [{
+        pmid: null,
+        title: `Search PubMed for "${query} Complications"`,
+        pubDate: 'N/A',
+        source: 'PubMed Search',
+        url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(query)}"+complications`
+      }];
     } else {
       // Check for slash-separated names in comprehensive database
       for (const [procedure, complications] of Object.entries(comprehensiveClinicalDatabase)) {
         if (matchesProcedureName(procedure, normalizedQuery)) {
           console.log(`✓ Found match in comprehensiveClinicalDatabase (with slash handling): "${procedure}"`);
           foundComplications = complications;
+          // Add PubMed search citation for comprehensive database matches
+          foundCitations = [{
+            pmid: null,
+            title: `Search PubMed for "${query} Complications"`,
+            pubDate: 'N/A',
+            source: 'PubMed Search',
+            url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(query)}"+complications`
+          }];
           break;
         }
       }
@@ -1529,13 +1545,12 @@ export default function PossibleComplications() {
         };
         
         // Create PubMed search citation for CSV procedures
-        const searchTerm = `${csvMatch.procedure} complications`;
         foundCitations = [{
           pmid: null,
-          title: `Search for "${csvMatch.procedure} complications" on PubMed`,
+          title: `Search PubMed for "${csvMatch.procedure} Complications"`,
           pubDate: 'N/A',
           source: 'PubMed Search',
-          url: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(searchTerm)}`
+          url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(csvMatch.procedure)}"+complications`
         }];
         
         foundComplications = {
@@ -1559,6 +1574,15 @@ export default function PossibleComplications() {
         ...comp,
         source: 'PubMed Literature'
       }));
+      
+      // Add PubMed search citation for fallback procedures
+      foundCitations = [{
+        pmid: null,
+        title: `Search PubMed for "${query} Complications"`,
+        pubDate: 'N/A',
+        source: 'PubMed Search',
+        url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(query)}"+complications`
+      }];
     }
 
     // Process the found complications

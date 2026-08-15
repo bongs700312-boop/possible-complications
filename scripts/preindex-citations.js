@@ -246,16 +246,73 @@ function fetchAPIWithTimeout(url, timeout) {
 }
 
 /**
- * Fetch PubMed citations for a procedure with fallback
+ * Extract key words from procedure name for relevance validation
+ */
+function extractKeyWords(procedure) {
+  // Remove common surgical terms and suffixes
+  const stopWords = [
+    'surgery', 'surgical', 'procedure', 'operation', 'treatment', 'therapy',
+    'repair', 'reconstruction', 'replacement', 'excision', 'resection', 'removal',
+    'implantation', 'insertion', 'placement', 'transplantation', 'transplant',
+    'bypass', 'graft', 'anastomosis', 'fistula', 'shunt', 'stent',
+    'decompression', 'release', 'closure', 'creation', 'formation',
+    'biopsy', 'puncture', 'drainage', 'aspiration', 'injection',
+    'management', 'control', 'regulation', 'restoration', 'restoration',
+    'left', 'right', 'bilateral', 'unilateral', 'partial', 'total', 'complete',
+    'primary', 'secondary', 'revision', 'emergency', 'elective',
+    'minimal', 'invasive', 'open', 'laparoscopic', 'endoscopic', 'percutaneous',
+    'transcatheter', 'endovascular', 'robotic', 'assisted', 'computer-assisted',
+    'with', 'and', 'for', 'of', 'in', 'on', 'at', 'by', 'or'
+  ];
+  
+  // Split procedure name into words
+  const words = procedure.toLowerCase()
+    .replace(/[^\w\s-]/g, ' ') // Remove special characters except hyphens
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !stopWords.includes(word));
+  
+  // If no meaningful words found, return the first few original words
+  if (words.length === 0) {
+    return procedure.toLowerCase()
+      .split(/\s+/)
+      .slice(0, 3)
+      .filter(word => word.length > 2);
+  }
+  
+  return words;
+}
+
+/**
+ * Check if article title is relevant to the procedure
+ */
+function isArticleRelevant(articleTitle, procedureKeyWords) {
+  const titleLower = articleTitle.toLowerCase();
+  
+  // Check if at least one key word from procedure appears in the title
+  for (const keyWord of procedureKeyWords) {
+    if (titleLower.includes(keyWord)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Fetch PubMed citations for a procedure with strict querying and relevance validation
  */
 async function fetchPubMedCitations(procedure, verbose = false) {
   try {
-    // Search for articles with more specific query
-    const searchTerm = `${procedure} complications`;
-    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(searchTerm)}&retmode=json&retmax=2`;
+    // Extract key words for relevance validation
+    const keyWords = extractKeyWords(procedure);
+    
+    // Use strict querying with quotes and title/abstract field search
+    const strictSearchTerm = `"${procedure}"[Title/Abstract] AND complications`;
+    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(strictSearchTerm)}&retmode=json&retmax=5`;
     
     if (verbose) {
       console.log(`Fetching citations for: ${procedure}`);
+      console.log(`  Key words for relevance: ${keyWords.join(', ')}`);
     }
     
     const searchData = await fetchAPI(searchUrl, 10000); // 10 second timeout
@@ -267,15 +324,16 @@ async function fetchPubMedCitations(procedure, verbose = false) {
       // Return fallback citation with search URL
       return [{
         pmid: null,
-        title: `Search for "${procedure} complications" on PubMed`,
+        title: `Search PubMed for "${procedure} Complications"`,
         pubDate: 'N/A',
         source: 'PubMed Search',
-        url: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(searchTerm)}`
+        url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(procedure)}"+complications`
       }];
     }
     
     const pmids = searchData.esearchresult.idlist;
-    const citations = [];
+    const allCitations = [];
+    const relevantCitations = [];
     
     // Fetch summaries for each PMID
     for (const pmid of pmids) {
@@ -285,13 +343,27 @@ async function fetchPubMedCitations(procedure, verbose = false) {
         
         if (summaryData.result && summaryData.result[pmid]) {
           const article = summaryData.result[pmid];
-          citations.push({
+          const citation = {
             pmid: pmid,
             title: article.title || 'Unknown Title',
             pubDate: article.pubdate || 'Unknown Date',
             source: article.source || 'PubMed',
             url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`
-          });
+          };
+          
+          allCitations.push(citation);
+          
+          // Check relevance
+          if (isArticleRelevant(citation.title, keyWords)) {
+            relevantCitations.push(citation);
+            if (verbose) {
+              console.log(`  ✓ Relevant article: ${citation.title.substring(0, 60)}...`);
+            }
+          } else {
+            if (verbose) {
+              console.log(`  ✗ Irrelevant article: ${citation.title.substring(0, 60)}...`);
+            }
+          }
         }
       } catch (error) {
         if (verbose) {
@@ -300,23 +372,37 @@ async function fetchPubMedCitations(procedure, verbose = false) {
       }
     }
     
-    if (verbose) {
-      console.log(`  Found ${citations.length} citations for ${procedure}`);
+    // If we have relevant citations, return them (max 2)
+    if (relevantCitations.length > 0) {
+      if (verbose) {
+        console.log(`  Found ${relevantCitations.length} relevant citations for ${procedure}`);
+      }
+      return relevantCitations.slice(0, 2);
     }
-    return citations;
+    
+    // If no relevant citations found, use fallback
+    if (verbose) {
+      console.log(`  No relevant citations found for ${procedure}, using fallback citation`);
+    }
+    return [{
+      pmid: null,
+      title: `Search PubMed for "${procedure} Complications"`,
+      pubDate: 'N/A',
+      source: 'PubMed Search',
+      url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(procedure)}"+complications`
+    }];
     
   } catch (error) {
     if (verbose) {
       console.log(`Error fetching PubMed citations for ${procedure}:`, error.message);
     }
     // Return fallback citation even on error
-    const searchTerm = `${procedure} complications`;
     return [{
       pmid: null,
-      title: `Search for "${procedure} complications" on PubMed`,
+      title: `Search PubMed for "${procedure} Complications"`,
       pubDate: 'N/A',
       source: 'PubMed Search',
-      url: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(searchTerm)}`
+      url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(procedure)}"+complications`
     }];
   }
 }
