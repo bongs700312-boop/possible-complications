@@ -1665,6 +1665,7 @@ export default function PossibleComplications() {
     }
 
     // Step 4: Only show fallback if ALL lookups fail
+    let useFallback = false;
     if (!foundComplications) {
       console.warn(`⚠️ FALLBACK TRIGGERED: No specific complications found for "${query}" (normalized: "${normalizedQuery}")`);
       console.warn(`⚠️ This procedure is using generic template data instead of procedure-specific complications`);
@@ -1686,13 +1687,17 @@ export default function PossibleComplications() {
         source: 'PubMed Search',
         url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(query)}"+complications`
       }];
+      
+      useFallback = true;
     }
 
     // Process the found complications
     let finalComplications;
+    let isFromCSV = false;
     
     if (foundComplications['1. Immediate / Intraoperative Complications']) {
       // Already categorized (from preindexed data or CSV)
+      isFromCSV = true;
       finalComplications = {
         '1. Immediate / Intraoperative Complications': foundComplications['1. Immediate / Intraoperative Complications'] || [],
         '2. Early Post-Operative Complications': foundComplications['2. Early Post-Operative Complications'] || [],
@@ -1717,7 +1722,20 @@ export default function PossibleComplications() {
         }
       }
       
-      finalComplications = ensureAllTimingCategories(deduplicatedComplications);
+      // Only use ensureAllTimingCategories for fallback data (when CSV/preindexed data is NOT used)
+      if (useFallback) {
+        finalComplications = ensureAllTimingCategories(deduplicatedComplications);
+      } else {
+        // For comprehensive database without timing categories, use categorization but NOT mandatory baseline injection
+        finalComplications = organizeComplicationsByCategory(deduplicatedComplications);
+        // Ensure all three categories exist (empty if no complications)
+        finalComplications = {
+          '1. Immediate / Intraoperative Complications': finalComplications['1. Immediate / Intraoperative Complications'] || [],
+          '2. Early Post-Operative Complications': finalComplications['2. Early Post-Operative Complications'] || [],
+          '3. Late / Long-Term Complications': finalComplications['3. Late / Long-Term Complications'] || [],
+          citations: foundCitations || []
+        };
+      }
     }
     
     setComplications(finalComplications);
@@ -2285,8 +2303,26 @@ This list is provided by your doctor to help you understand potential risks befo
                                 </View>
                               </View>
                               <View style={styles.complicationContent}>
-                                <Text style={styles.complicationName}>{complication.name}</Text>
-                                {complication.description && <Text style={styles.complicationDescription}>{complication.description}</Text>}
+                                {(() => {
+                                  const rawString = complication.name;
+                                  let title = rawString;
+                                  let subtitle = '';
+                                  
+                                  if (rawString.includes('(')) {
+                                    const match = rawString.match(/^([^(]+)\(([^)]+)\)/);
+                                    if (match) {
+                                      title = match[1].trim();
+                                      subtitle = match[2].trim();
+                                    }
+                                  }
+                                  
+                                  return (
+                                    <>
+                                      <Text style={styles.complicationName}>{title}</Text>
+                                      {subtitle && <Text style={styles.complicationDescription}>{subtitle}</Text>}
+                                    </>
+                                  );
+                                })()}
                               </View>
                             </TouchableOpacity>
                           ))}
