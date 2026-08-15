@@ -1934,7 +1934,7 @@ This list is provided by your doctor to help you understand potential risks befo
             <View style={styles.headerLeft}>
               <Text style={styles.title}>Possible Complications</Text>
               <Text style={styles.subtitle}>
-                {currentProcedure ? `Procedure: ${currentProcedure}` : 'Baseline Clinical Profiles Enriched with Open PubMed Literature Citations (NIH/NLM)'}
+                {currentProcedure ? `Procedure: ${currentProcedure}` : '🩺 Evidence-based surgical complications synthesized from PubMed & NLM Literature'}
               </Text>
             </View>
             <View style={styles.headerActions}>
