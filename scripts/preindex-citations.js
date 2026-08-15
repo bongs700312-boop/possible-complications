@@ -450,8 +450,9 @@ async function fetchPubMedCitations(procedure, verbose = false) {
 
 /**
  * Helper function to parse complication strings with parentheses or slash
+ * Note: This function preserves existing formatting and only adds fallbacks for truly missing data
  */
-function parseComplication(complicationString) {
+function parseComplication(complicationString, fromCSV = false) {
   if (!complicationString) return { title: '', subtitle: '' };
   
   // Clean stray characters
@@ -489,7 +490,12 @@ function parseComplication(complicationString) {
     return { title, subtitle };
   }
   
-  // Fallback: If no parentheses or slash, use title with generic explanation
+  // Fallback: Only add generic explanation if data is NOT from CSV and has no formatting
+  // CSV data takes 100% priority - if it has no formatting, keep it as-is
+  if (fromCSV) {
+    return { title: cleaned, subtitle: '' };
+  }
+  
   const genericExplanations = [
     'Post-operative complication requiring monitoring',
     'Surgical risk that may need intervention',
@@ -510,7 +516,7 @@ function parseComplication(complicationString) {
  */
 function createComplicationObjects(complicationNames) {
   return complicationNames.map((name, index) => {
-    const { title, subtitle } = parseComplication(name);
+    const { title, subtitle } = parseComplication(name, true); // Mark as from CSV
     return {
       id: `csv-${Date.now()}-${index}`,
       name: title,

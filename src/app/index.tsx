@@ -5,7 +5,8 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, StatusBar, StyleShe
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Helper function to parse complication strings with parentheses or slash
-const parseComplication = (complicationString) => {
+// Note: This function preserves existing formatting and only adds fallbacks for truly missing data
+const parseComplication = (complicationString, fromCSV = false) => {
   if (!complicationString) return { title: '', subtitle: '' };
   
   // Clean stray characters
@@ -43,7 +44,12 @@ const parseComplication = (complicationString) => {
     return { title, subtitle };
   }
   
-  // Fallback: If no parentheses or slash, use title with generic explanation
+  // Fallback: Only add generic explanation if data is NOT from CSV and has no formatting
+  // CSV data takes 100% priority - if it has no formatting, keep it as-is
+  if (fromCSV) {
+    return { title: cleaned, subtitle: '' };
+  }
+  
   const genericExplanations = [
     'Post-operative complication requiring monitoring',
     'Surgical risk that may need intervention',
@@ -1630,7 +1636,7 @@ export default function PossibleComplications() {
         // Create complication objects from CSV data
         const createComplicationObjects = (complicationNames) => {
           return complicationNames.map((name, index) => {
-            const { title, subtitle } = parseComplication(name);
+            const { title, subtitle } = parseComplication(name, true); // Mark as from CSV
             return {
               id: `csv-${Date.now()}-${index}`,
               name: title,
@@ -1881,11 +1887,10 @@ export default function PossibleComplications() {
             <div class="category-section">
               <div class="category-title category-${categoryClass}">${category} (${items.length})</div>
               ${items.map(comp => {
-                const { title, subtitle } = parseComplication(comp.name);
                 return `
                 <div class="complication">
-                  <div class="complication-name">${title}</div>
-                  ${subtitle ? `<div class="complication-desc">${subtitle}</div>` : ''}
+                  <div class="complication-name">${comp.name}</div>
+                  ${comp.description ? `<div class="complication-desc">${comp.description}</div>` : ''}
                 </div>
               `;
               }).join('')}
@@ -2280,15 +2285,8 @@ This list is provided by your doctor to help you understand potential risks befo
                                 </View>
                               </View>
                               <View style={styles.complicationContent}>
-                                {(() => {
-                                  const { title, subtitle } = parseComplication(complication.name);
-                                  return (
-                                    <>
-                                      <Text style={styles.complicationName}>{title}</Text>
-                                      {subtitle && <Text style={styles.complicationDescription}>{subtitle}</Text>}
-                                    </>
-                                  );
-                                })()}
+                                <Text style={styles.complicationName}>{complication.name}</Text>
+                                {complication.description && <Text style={styles.complicationDescription}>{complication.description}</Text>}
                               </View>
                             </TouchableOpacity>
                           ))}

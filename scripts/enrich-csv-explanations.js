@@ -123,15 +123,6 @@ const complicationExplanations = {
   'vascular': 'Blood vessel complications',
 };
 
-// Generic explanations for when no specific match is found
-const genericExplanations = [
-  'Post-operative complication requiring monitoring',
-  'Surgical risk that may need intervention',
-  'Common post-surgical side effect',
-  'Potential complication during recovery',
-  'Healing-related issue',
-];
-
 /**
  * Generate an explanation for a complication string
  */
@@ -153,9 +144,8 @@ function generateExplanation(complicationString) {
     }
   }
   
-  // Use generic explanation if no match
-  const genericIndex = complicationString.length % genericExplanations.length;
-  return genericExplanations[genericIndex];
+  // Return null if no specific match - don't add generic explanations
+  return null;
 }
 
 /**
