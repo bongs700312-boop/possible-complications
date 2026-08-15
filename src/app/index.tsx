@@ -1083,7 +1083,10 @@ const parseCSVContent = (content) => {
 
     // Validate header row - should now include complication columns
     const headerLine = lines[0].trim();
-    if (!headerLine.includes('Procedure') || !headerLine.includes('Specialty')) {
+    if (!headerLine.includes('Procedure') || !headerLine.includes('Specialty') || 
+        !headerLine.includes('Immediate / Intraoperative Complications') || 
+        !headerLine.includes('Early Post-Operative Complications') || 
+        !headerLine.includes('Late Post-Operative Complications')) {
       console.error('CSV header does not match expected format "Procedure;Specialty;Immediate / Intraoperative Complications;Early Post-Operative Complications;Late Post-Operative Complications"');
       console.log('Actual header:', headerLine);
       return [];
@@ -1110,17 +1113,26 @@ const parseCSVContent = (content) => {
         if (parts.length >= 5) {
           // Parse Immediate / Intraoperative Complications
           if (parts[2] && parts[2].trim()) {
-            immediateComplications = parts[2].trim().split(';').map(c => c.trim()).filter(c => c);
+            immediateComplications = parts[2].trim()
+              .split(';')
+              .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+              .filter(c => c);
           }
           
           // Parse Early Post-Operative Complications
           if (parts[3] && parts[3].trim()) {
-            earlyComplications = parts[3].trim().split(';').map(c => c.trim()).filter(c => c);
+            earlyComplications = parts[3].trim()
+              .split(';')
+              .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+              .filter(c => c);
           }
           
           // Parse Late Post-Operative Complications
           if (parts[4] && parts[4].trim()) {
-            lateComplications = parts[4].trim().split(';').map(c => c.trim()).filter(c => c);
+            lateComplications = parts[4].trim()
+              .split(';')
+              .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+              .filter(c => c);
           }
         }
         

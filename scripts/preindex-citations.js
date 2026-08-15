@@ -133,6 +133,17 @@ function parseCSVContent(content) {
   const lines = content.split('\n');
   const procedures = [];
   
+  // Validate header row
+  const headerLine = lines[0].trim();
+  if (!headerLine.includes('Procedure') || !headerLine.includes('Specialty') || 
+      !headerLine.includes('Immediate / Intraoperative Complications') || 
+      !headerLine.includes('Early Post-Operative Complications') || 
+      !headerLine.includes('Late Post-Operative Complications')) {
+    console.error('CSV header does not match expected format');
+    console.log('Actual header:', headerLine);
+    return [];
+  }
+  
   // Skip header row (index 0)
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -152,17 +163,26 @@ function parseCSVContent(content) {
       if (parts.length >= 5) {
         // Parse Immediate / Intraoperative Complications
         if (parts[2] && parts[2].trim()) {
-          immediateComplications = parts[2].trim().split(';').map(c => c.trim()).filter(c => c);
+          immediateComplications = parts[2].trim()
+            .split(';')
+            .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+            .filter(c => c);
         }
         
         // Parse Early Post-Operative Complications
         if (parts[3] && parts[3].trim()) {
-          earlyComplications = parts[3].trim().split(';').map(c => c.trim()).filter(c => c);
+          earlyComplications = parts[3].trim()
+            .split(';')
+            .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+            .filter(c => c);
         }
         
         // Parse Late Post-Operative Complications
         if (parts[4] && parts[4].trim()) {
-          lateComplications = parts[4].trim().split(';').map(c => c.trim()).filter(c => c);
+          lateComplications = parts[4].trim()
+            .split(';')
+            .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+            .filter(c => c);
         }
       }
       
