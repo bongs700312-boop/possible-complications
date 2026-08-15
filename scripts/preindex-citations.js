@@ -449,7 +449,7 @@ async function fetchPubMedCitations(procedure, verbose = false) {
 }
 
 /**
- * Helper function to parse complication strings with parentheses
+ * Helper function to parse complication strings with parentheses or slash
  */
 function parseComplication(complicationString) {
   if (!complicationString) return { title: '', subtitle: '' };
@@ -459,7 +459,7 @@ function parseComplication(complicationString) {
     .replace(/^[-\s"]+|[-\s"]+$/g, '') // Remove leading/trailing dashes, spaces, quotes
     .trim();
   
-  // Check for parentheses
+  // Check for parentheses first
   const parenMatch = cleaned.match(/^(.+?)\s*\((.+?)\)$/);
   
   if (parenMatch) {
@@ -474,7 +474,22 @@ function parseComplication(complicationString) {
     return { title, subtitle };
   }
   
-  // No parentheses found
+  // If no parentheses, check for slash
+  const slashMatch = cleaned.match(/^(.+?)\s*\/\s*(.+)$/);
+  
+  if (slashMatch) {
+    const title = slashMatch[1].trim();
+    const subtitle = slashMatch[2].trim();
+    
+    // Avoid duplicate text
+    if (title.toLowerCase() === subtitle.toLowerCase()) {
+      return { title, subtitle: '' };
+    }
+    
+    return { title, subtitle };
+  }
+  
+  // No parentheses or slash found
   return { title: cleaned, subtitle: '' };
 }
 

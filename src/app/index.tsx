@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Helper function to parse complication strings with parentheses
+// Helper function to parse complication strings with parentheses or slash
 const parseComplication = (complicationString) => {
   if (!complicationString) return { title: '', subtitle: '' };
   
@@ -13,7 +13,7 @@ const parseComplication = (complicationString) => {
     .replace(/^[-\s"]+|[-\s"]+$/g, '') // Remove leading/trailing dashes, spaces, quotes
     .trim();
   
-  // Check for parentheses
+  // Check for parentheses first
   const parenMatch = cleaned.match(/^(.+?)\s*\((.+?)\)$/);
   
   if (parenMatch) {
@@ -28,7 +28,22 @@ const parseComplication = (complicationString) => {
     return { title, subtitle };
   }
   
-  // No parentheses found
+  // If no parentheses, check for slash
+  const slashMatch = cleaned.match(/^(.+?)\s*\/\s*(.+)$/);
+  
+  if (slashMatch) {
+    const title = slashMatch[1].trim();
+    const subtitle = slashMatch[2].trim();
+    
+    // Avoid duplicate text
+    if (title.toLowerCase() === subtitle.toLowerCase()) {
+      return { title, subtitle: '' };
+    }
+    
+    return { title, subtitle };
+  }
+  
+  // No parentheses or slash found
   return { title: cleaned, subtitle: '' };
 };
 
@@ -539,10 +554,10 @@ const comprehensiveClinicalDatabase = {
 const categoryComplicationTemplates = {
   'Central nervous system': [
     // 1. Immediate / Intraoperative Complications
-    { name: 'Surgical Mortality / Death During Surgery', description: 'Extremely rare risk of death during brain surgery due to anesthesia or surgical complications', category: 'Severe' },
-    { name: 'Anesthetic Complications', description: 'Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias', category: 'Severe' },
-    { name: 'Intraoperative Hemorrhage', description: 'Severe bleeding in the brain requiring blood transfusion', category: 'Severe' },
-    { name: 'Unintended Visceral or Neurovascular Injury', description: 'Accidental damage to brain tissue, blood vessels, or nerves during surgery', category: 'Severe' },
+    { name: 'Surgical Mortality (Extremely rare risk of death during brain surgery due to anesthesia or surgical complications)', description: '', category: 'Severe' },
+    { name: 'Anesthetic Complications (Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias)', description: '', category: 'Severe' },
+    { name: 'Intraoperative Hemorrhage (Severe bleeding in the brain requiring blood transfusion)', description: '', category: 'Severe' },
+    { name: 'Unintended Visceral or Neurovascular Injury (Accidental damage to brain tissue, blood vessels, or nerves during surgery)', description: '', category: 'Severe' },
     // 2. Early Post-Operative Complications (first 30 days)
     { name: 'Surgical Site Infection', description: 'Infection at the brain surgery incision that may require antibiotics', category: 'Severe' },
     { name: 'Abscess Formation', description: 'Collection of pus in brain or surrounding tissues requiring drainage', category: 'Severe' },
@@ -565,10 +580,10 @@ const categoryComplicationTemplates = {
   ],
   'Peripheral nervous system': [
     // 1. Immediate / Intraoperative Complications
-    { name: 'Surgical Mortality / Death During Surgery', description: 'Extremely rare risk of death during nerve surgery due to anesthesia or complications', category: 'Severe' },
-    { name: 'Anesthetic Complications', description: 'Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias', category: 'Severe' },
-    { name: 'Intraoperative Hemorrhage', description: 'Severe bleeding requiring blood transfusion during surgery', category: 'Severe' },
-    { name: 'Unintended Visceral or Neurovascular Injury', description: 'Accidental injury to nearby nerves or blood vessels not intended for surgery', category: 'Severe' },
+    { name: 'Surgical Mortality (Extremely rare risk of death during nerve surgery due to anesthesia or complications)', description: '', category: 'Severe' },
+    { name: 'Anesthetic Complications (Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias)', description: '', category: 'Severe' },
+    { name: 'Intraoperative Hemorrhage (Severe bleeding requiring blood transfusion during surgery)', description: '', category: 'Severe' },
+    { name: 'Unintended Visceral or Neurovascular Injury (Accidental injury to nearby nerves or blood vessels not intended for surgery)', description: '', category: 'Severe' },
     // 2. Early Post-Operative Complications (first 30 days)
     { name: 'Surgical Site Infection', description: 'Infection at the incision that may require antibiotics or drainage', category: 'Severe' },
     { name: 'Abscess Formation', description: 'Collection of pus requiring drainage procedures', category: 'Severe' },
@@ -679,11 +694,11 @@ const categoryComplicationTemplates = {
   ],
   'Cardiovascular': [
     // 1. Immediate / Intraoperative Complications
-    { name: 'Surgical Mortality / Death During Surgery', description: 'Risk of death during heart surgery due to anesthesia or cardiac complications', category: 'Severe' },
-    { name: 'Anesthetic Complications', description: 'Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias', category: 'Severe' },
-    { name: 'Intraoperative Cardiac Arrest', description: 'Heart stopping during surgery requiring resuscitation', category: 'Severe' },
-    { name: 'Intraoperative Hemorrhage', description: 'Severe bleeding requiring massive blood transfusion', category: 'Severe' },
-    { name: 'Unintended Visceral or Neurovascular Injury', description: 'Accidental damage to heart valves, coronary arteries, bypass grafts, or aorta during surgery', category: 'Severe' },
+    { name: 'Surgical Mortality (Risk of death during heart surgery due to anesthesia or cardiac complications)', description: '', category: 'Severe' },
+    { name: 'Anesthetic Complications (Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias)', description: '', category: 'Severe' },
+    { name: 'Intraoperative Cardiac Arrest (Heart stopping during surgery requiring resuscitation)', description: '', category: 'Severe' },
+    { name: 'Intraoperative Hemorrhage (Severe bleeding requiring massive blood transfusion)', description: '', category: 'Severe' },
+    { name: 'Unintended Visceral or Neurovascular Injury (Accidental damage to heart valves, coronary arteries, bypass grafts, or aorta during surgery)', description: '', category: 'Severe' },
     { name: 'Systemic Anaphylaxis', description: 'Severe allergic reaction to medications or blood products', category: 'Severe' },
     // 2. Early Post-Operative Complications (first 30 days)
     { name: 'Surgical Site Infection', description: 'Infection at chest incision or bypass graft sites', category: 'Severe' },
@@ -730,10 +745,10 @@ const categoryComplicationTemplates = {
   ],
   'GI/mouth': [
     // 1. Immediate / Intraoperative Complications
-    { name: 'Surgical Mortality / Death During Surgery', description: 'Risk of death during abdominal surgery due to anesthesia or surgical complications', category: 'Severe' },
-    { name: 'Anesthetic Complications', description: 'Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias', category: 'Severe' },
-    { name: 'Intraoperative Hemorrhage', description: 'Severe bleeding from abdominal organs requiring blood transfusion', category: 'Severe' },
-    { name: 'Unintended Visceral or Neurovascular Injury', description: 'Accidental damage to nearby organs, blood vessels, or nerves during surgery', category: 'Severe' },
+    { name: 'Surgical Mortality (Risk of death during abdominal surgery due to anesthesia or surgical complications)', description: '', category: 'Severe' },
+    { name: 'Anesthetic Complications (Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias)', description: '', category: 'Severe' },
+    { name: 'Intraoperative Hemorrhage (Severe bleeding from abdominal organs requiring blood transfusion)', description: '', category: 'Severe' },
+    { name: 'Unintended Visceral or Neurovascular Injury (Accidental damage to nearby organs, blood vessels, or nerves during surgery)', description: '', category: 'Severe' },
     { name: 'Bowel Perforation', description: 'Accidental hole in intestine causing abdominal infection during surgery', category: 'Severe' },
     // 2. Early Post-Operative Complications (first 30 days)
     { name: 'Surgical Site Infection', description: 'Infection at abdominal incision requiring antibiotics', category: 'Severe' },
@@ -757,10 +772,10 @@ const categoryComplicationTemplates = {
   ],
   'Urinary': [
     // 1. Immediate / Intraoperative Complications
-    { name: 'Surgical Mortality / Death During Surgery', description: 'Extremely rare risk of death during kidney/bladder surgery due to anesthesia or complications', category: 'Severe' },
-    { name: 'Anesthetic Complications', description: 'Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias', category: 'Severe' },
-    { name: 'Intraoperative Hemorrhage', description: 'Severe bleeding from kidney or bladder requiring blood transfusion', category: 'Severe' },
-    { name: 'Unintended Visceral or Neurovascular Injury', description: 'Accidental damage to nearby organs, blood vessels, or nerves during surgery', category: 'Severe' },
+    { name: 'Surgical Mortality (Extremely rare risk of death during kidney/bladder surgery due to anesthesia or complications)', description: '', category: 'Severe' },
+    { name: 'Anesthetic Complications (Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias)', description: '', category: 'Severe' },
+    { name: 'Intraoperative Hemorrhage (Severe bleeding from kidney or bladder requiring blood transfusion)', description: '', category: 'Severe' },
+    { name: 'Unintended Visceral or Neurovascular Injury (Accidental damage to nearby organs, blood vessels, or nerves during surgery)', description: '', category: 'Severe' },
     { name: 'Ureteral Injury', description: 'Damage to tubes connecting kidneys to bladder during surgery', category: 'Severe' },
     // 2. Early Post-Operative Complications (first 30 days)
     { name: 'Surgical Site Infection', description: 'Infection at incision or inside urinary tract requiring antibiotics', category: 'Severe' },
@@ -832,10 +847,10 @@ const categoryComplicationTemplates = {
   ],
   'Joint': [
     // 1. Immediate / Intraoperative Complications
-    { name: 'Surgical Mortality / Death During Surgery', description: 'Extremely rare risk of death during joint surgery due to anesthesia or complications', category: 'Severe' },
-    { name: 'Anesthetic Complications', description: 'Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias', category: 'Severe' },
-    { name: 'Intraoperative Hemorrhage', description: 'Severe bleeding requiring blood transfusion', category: 'Severe' },
-    { name: 'Unintended Visceral or Neurovascular Injury', description: 'Accidental damage to nearby organs, blood vessels, or nerves during surgery', category: 'Severe' },
+    { name: 'Surgical Mortality (Extremely rare risk of death during joint surgery due to anesthesia or complications)', description: '', category: 'Severe' },
+    { name: 'Anesthetic Complications (Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias)', description: '', category: 'Severe' },
+    { name: 'Intraoperative Hemorrhage (Severe bleeding requiring blood transfusion)', description: '', category: 'Severe' },
+    { name: 'Unintended Visceral or Neurovascular Injury (Accidental damage to nearby organs, blood vessels, or nerves during surgery)', description: '', category: 'Severe' },
     { name: 'Bone Fracture', description: 'Accidental bone fracture during joint surgery', category: 'Severe' },
     // 2. Early Post-Operative Complications (first 30 days)
     { name: 'Surgical Site Infection', description: 'Infection at joint incision requiring antibiotics', category: 'Severe' },
@@ -1276,10 +1291,10 @@ const minorSuperficialFallback = [
 
 // Universal immediate/intraoperative fallbacks - applies to ALL procedures
 const universalImmediateFallbacks = [
-  { name: 'Surgical Mortality / Death during surgery', description: 'Risk of fatal intraoperative event or surgical mortality', category: 'Severe', source: 'PubMed Literature' },
-  { name: 'Anesthetic Complications', description: 'Adverse reactions to general anesthesia, airway/respiratory compromise, cardiac arrhythmias, or anaphylaxis', category: 'Severe', source: 'UpToDate Guidelines' },
-  { name: 'Intraoperative Hemorrhage / Heavy Bleeding', description: 'Severe blood loss during surgery requiring blood transfusion or intervention', category: 'Severe', source: 'Medscape Medical Review' },
-  { name: 'Accidental Surrounding Tissue / Organ / Neurovascular Damage', description: 'Accidental injury to nearby tissues, organs, blood vessels, or nerves during the procedure', category: 'Severe', source: 'Medline Resource' },
+  { name: 'Surgical Mortality (Extremely rare surgical risk or fatal complication)', description: '', category: 'Severe', source: 'PubMed Literature' },
+  { name: 'Anesthetic Complications (Adverse reactions to general anesthesia including malignant hyperthermia, difficult airway, aspiration, or cardiac arrhythmias)', description: '', category: 'Severe', source: 'UpToDate Guidelines' },
+  { name: 'Intraoperative Hemorrhage (Excessive or unexpected bleeding during the procedure)', description: '', category: 'Severe', source: 'Medscape Medical Review' },
+  { name: 'Accidental Surrounding Tissue / Organ / Neurovascular Damage (Accidental injury to nearby tissues, organs, blood vessels, or nerves during the procedure)', description: '', category: 'Severe', source: 'Medline Resource' },
 ];
 
 // Universal early post-operative fallbacks - applies to ALL procedures
@@ -1300,12 +1315,12 @@ const universalLateFallbacks = [
 
 const majorSurgicalFallback = [
   // 1. Immediate / Intraoperative Complications
-  { id: 1, name: 'Surgical Mortality / Death During Surgery', description: 'Risk of death during surgery due to anesthesia or surgical complications', category: 'Severe', source: 'PubMed Literature' },
-  { id: 2, name: 'Anesthetic Complications', description: 'Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias', category: 'Severe', source: 'UpToDate Guidelines' },
-  { id: 3, name: 'Intraoperative Cardiac Arrest', description: 'Heart stopping during surgery requiring resuscitation', category: 'Severe', source: 'Mayo Clinic Clinical Reference' },
-  { id: 4, name: 'Intraoperative Hemorrhage', description: 'Severe bleeding requiring blood transfusion', category: 'Severe', source: 'Medscape Medical Review' },
-  { id: 5, name: 'Unintended Visceral or Neurovascular Injury', description: 'Accidental damage to nearby organs, blood vessels, or nerves', category: 'Severe', source: 'Medline Resource' },
-  { id: 6, name: 'Systemic Anaphylaxis', description: 'Severe allergic reaction to medications or materials', category: 'Severe', source: 'PubMed Literature' },
+  { id: 1, name: 'Surgical Mortality (Extremely rare surgical risk or fatal complication)', description: '', category: 'Severe', source: 'PubMed Literature' },
+  { id: 2, name: 'Anesthetic Complications (Adverse reaction to general anesthesia including malignant hyperthermia, difficult airway, aspiration, anaphylaxis, or cardiac arrhythmias)', description: '', category: 'Severe', source: 'UpToDate Guidelines' },
+  { id: 3, name: 'Intraoperative Cardiac Arrest (Heart stopping during surgery requiring resuscitation)', description: '', category: 'Severe', source: 'Mayo Clinic Clinical Reference' },
+  { id: 4, name: 'Intraoperative Hemorrhage (Excessive or unexpected bleeding during the procedure)', description: '', category: 'Severe', source: 'Medscape Medical Review' },
+  { id: 5, name: 'Unintended Visceral or Neurovascular Injury (Accidental damage to nearby organs, blood vessels, or nerves)', description: '', category: 'Severe', source: 'Medline Resource' },
+  { id: 6, name: 'Systemic Anaphylaxis (Severe allergic reaction to medications or materials)', description: '', category: 'Severe', source: 'PubMed Literature' },
   // 2. Early Post-Operative Complications (first 30 days)
   { id: 7, name: 'Surgical Site Infection', description: 'Infection at incision requiring antibiotics', category: 'Severe', source: 'UpToDate Guidelines' },
   { id: 8, name: 'Abscess Formation', description: 'Collection of pus requiring drainage', category: 'Severe', source: 'Mayo Clinic Clinical Reference' },
