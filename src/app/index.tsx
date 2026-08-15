@@ -1528,6 +1528,16 @@ export default function PossibleComplications() {
           }));
         };
         
+        // Create PubMed search citation for CSV procedures
+        const searchTerm = `${csvMatch.procedure} complications`;
+        foundCitations = [{
+          pmid: null,
+          title: `Search for "${csvMatch.procedure} complications" on PubMed`,
+          pubDate: 'N/A',
+          source: 'PubMed Search',
+          url: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(searchTerm)}`
+        }];
+        
         foundComplications = {
           '1. Immediate / Intraoperative Complications': createComplicationObjects(csvMatch.immediateComplications || [], 'Immediate'),
           '2. Early Post-Operative Complications': createComplicationObjects(csvMatch.earlyComplications || [], 'Early'),
@@ -2143,7 +2153,30 @@ This list is provided by your doctor to help you understand potential risks befo
                         </View>
                       );
                     })}
-                    
+
+                    {/* Render citations section if available */}
+                    {complications.citations && complications.citations.length > 0 && (
+                      <View style={styles.citationSection}>
+                        <Text style={styles.citationTitle}>References & Literature Citations</Text>
+                        {complications.citations.map((citation, index) => (
+                          <TouchableOpacity
+                            key={`citation-${index}`}
+                            style={styles.citationItem}
+                            onPress={() => {
+                              if (Platform.OS === 'web') {
+                                window.open(citation.url, '_blank');
+                              } else {
+                                Linking.openURL(citation.url);
+                              }
+                            }}
+                          >
+                            <Text style={styles.citationTitleText}>{citation.title}</Text>
+                            <Text style={styles.citationSource}>{citation.pubDate} • {citation.source}</Text>
+                            <Text style={styles.citationLink}>View on PubMed</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
 
                   </>
                 )}
