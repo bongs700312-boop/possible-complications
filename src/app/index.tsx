@@ -1448,6 +1448,7 @@ export default function PossibleComplications() {
   });
   const [patientName, setPatientName] = useState('');
   const [surgeonName, setSurgeonName] = useState('');
+  const [doctorNotes, setDoctorNotes] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [isInvalidProcedure, setIsInvalidProcedure] = useState(false);
   const [hoveredAction, setHoveredAction] = useState(null);
@@ -1809,6 +1810,9 @@ export default function PossibleComplications() {
           .complication { margin: 12px 0; padding: 12px; background: #f5f5f5; border-left: 4px solid #3c87f7; border-radius: 4px; }
           .complication-name { font-weight: bold; font-size: 15px; }
           .complication-desc { color: #666; margin-top: 5px; font-size: 14px; }
+          .doctor-notes-section { margin: 25px 0; padding: 16px; background: #FFF9E6; border-left: 4px solid #FFB74D; border-radius: 6px; }
+          .doctor-notes-title { font-size: 16px; font-weight: bold; color: #E65100; margin-bottom: 12px; }
+          .doctor-notes-content { font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; }
           .citation-section { margin: 20px 0; padding: 15px; background: #f0f7ff; border-left: 4px solid #1976D2; border-radius: 6px; }
           .citation-title { font-size: 14px; font-weight: bold; color: #1976D2; margin-bottom: 5px; }
           .citation-list { margin-top: 10px; }
@@ -1876,6 +1880,13 @@ export default function PossibleComplications() {
             </div>
           `;
         }).join('')}
+
+        ${doctorNotes ? `
+          <div class="doctor-notes-section">
+            <div class="doctor-notes-title">Doctor Notes / Special Instructions</div>
+            <div class="doctor-notes-content">${doctorNotes}</div>
+          </div>
+        ` : ''}
 
         ${complications.citations && complications.citations.length > 0 ? `
           <div class="citation-section">
@@ -2007,6 +2018,7 @@ This list is provided by your doctor to help you understand potential risks befo
     setCurrentProcedure('');
     setPatientName('');
     setSurgeonName('');
+    setDoctorNotes('');
     setSelectedItems([]);
     setIsInvalidProcedure(false);
   };
@@ -2271,6 +2283,22 @@ This list is provided by your doctor to help you understand potential risks befo
                         </View>
                       );
                     })}
+
+                    {/* Doctor Notes Section */}
+                    <View style={styles.doctorNotesSection}>
+                      <Text style={styles.doctorNotesTitle}>Doctor Notes / Special Instructions</Text>
+                      <TextInput
+                        style={styles.doctorNotesInput}
+                        placeholder="Enter custom surgical notes, specific patient risks, or pre-op instructions here..."
+                        placeholderTextColor="#999"
+                        value={doctorNotes}
+                        onChangeText={setDoctorNotes}
+                        editable={true}
+                        multiline={true}
+                        numberOfLines={4}
+                        textAlignVertical="top"
+                      />
+                    </View>
 
                     {/* Render citations section if available */}
                     {complications.citations && complications.citations.length > 0 && (
@@ -2584,6 +2612,30 @@ const styles = StyleSheet.create({
     color: '#555555',
     marginTop: 2,
     marginBottom: 2,
+  },
+  doctorNotesSection: {
+    marginTop: Platform.OS === 'web' ? 24 : 20,
+    padding: Platform.OS === 'web' ? 16 : 14,
+    backgroundColor: '#FFF9E6',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFB74D',
+  },
+  doctorNotesTitle: {
+    fontSize: Platform.OS === 'web' ? 16 : 14,
+    fontWeight: '700',
+    color: '#E65100',
+    marginBottom: Platform.OS === 'web' ? 12 : 10,
+  },
+  doctorNotesInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+    padding: Platform.OS === 'web' ? 12 : 10,
+    fontSize: Platform.OS === 'web' ? 14 : 13,
+    color: '#000',
+    minHeight: Platform.OS === 'web' ? 100 : 80,
   },
   citationSection: {
     marginTop: Platform.OS === 'web' ? 24 : 20,
