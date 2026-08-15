@@ -1065,6 +1065,7 @@ const loadProcedureComplicationsCSV = async () => {
 };
 
 // Function to parse CSV content with semicolon delimiter
+// Properly handles quoted fields containing semicolons
 const parseCSVContent = (content) => {
   try {
     if (!content || typeof content !== 'string') {
@@ -1097,8 +1098,24 @@ const parseCSVContent = (content) => {
       const line = lines[i].trim();
       if (!line) continue;
       
-      // Split by semicolon
-      const parts = line.split(';');
+      // Parse CSV line handling quoted fields
+      const parts = [];
+      let currentPart = '';
+      let inQuotes = false;
+      
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+        
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ';' && !inQuotes) {
+          parts.push(currentPart);
+          currentPart = '';
+        } else {
+          currentPart += char;
+        }
+      }
+      parts.push(currentPart); // Add the last part
       
       // Ensure we have at least 2 columns (old format) or 5 columns (new format)
       if (parts.length >= 2) {
@@ -1114,24 +1131,27 @@ const parseCSVContent = (content) => {
           // Parse Immediate / Intraoperative Complications
           if (parts[2] && parts[2].trim()) {
             immediateComplications = parts[2].trim()
+              .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
               .split(';')
-              .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+              .map(c => c.trim()) // Trim whitespace from each complication
               .filter(c => c);
           }
           
           // Parse Early Post-Operative Complications
           if (parts[3] && parts[3].trim()) {
             earlyComplications = parts[3].trim()
+              .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
               .split(';')
-              .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+              .map(c => c.trim()) // Trim whitespace from each complication
               .filter(c => c);
           }
           
           // Parse Late Post-Operative Complications
           if (parts[4] && parts[4].trim()) {
             lateComplications = parts[4].trim()
+              .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
               .split(';')
-              .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+              .map(c => c.trim()) // Trim whitespace from each complication
               .filter(c => c);
           }
         }
@@ -1546,11 +1566,11 @@ export default function PossibleComplications() {
         console.log(`✓ Found match in CSV procedures: "${csvMatch.procedure}"`);
         
         // Create complication objects from CSV data
-        const createComplicationObjects = (complicationNames, category) => {
+        const createComplicationObjects = (complicationNames) => {
           return complicationNames.map((name, index) => ({
             id: `csv-${Date.now()}-${index}`,
             name: name,
-            description: `${name} - ${category}`,
+            description: name,
             category: 'Severe',
             source: 'Clinical Literature'
           }));
@@ -1566,9 +1586,9 @@ export default function PossibleComplications() {
         }];
         
         foundComplications = {
-          '1. Immediate / Intraoperative Complications': createComplicationObjects(csvMatch.immediateComplications || [], 'Immediate'),
-          '2. Early Post-Operative Complications': createComplicationObjects(csvMatch.earlyComplications || [], 'Early'),
-          '3. Late / Long-Term Complications': createComplicationObjects(csvMatch.lateComplications || [], 'Late')
+          '1. Immediate / Intraoperative Complications': createComplicationObjects(csvMatch.immediateComplications || []),
+          '2. Early Post-Operative Complications': createComplicationObjects(csvMatch.earlyComplications || []),
+          '3. Late / Long-Term Complications': createComplicationObjects(csvMatch.lateComplications || [])
         };
       }
     }

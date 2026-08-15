@@ -44,7 +44,8 @@
     "build:web": "expo export -p web",
     "preview": "npx serve dist",
     "preindex": "node ./scripts/preindex-citations.js",
-    "preindex:all": "node ./scripts/preindex-citations.js"
+    "preindex:all": "node ./scripts/preindex-citations.js",
+    "update-csv": "node ./scripts/update-csv-from-comprehensive.js"
   },
   "private": true
 }

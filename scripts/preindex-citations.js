@@ -102,11 +102,11 @@ const universalBaselineComplications = {
 /**
  * Read and parse CSV file
  */
-function readCSV(filePath) {
+function readCSV(filePath, verbose = false) {
   try {
     if (fs.existsSync(filePath)) {
       const content = fs.readFileSync(filePath, 'utf-8');
-      return parseCSVContent(content);
+      return parseCSVContent(content, verbose);
     }
   } catch (error) {
     console.log(`Failed to read ${filePath}:`, error.message);
@@ -116,7 +116,7 @@ function readCSV(filePath) {
   try {
     if (fs.existsSync(PROCEDURES_ASSET_PATH)) {
       const content = fs.readFileSync(PROCEDURES_ASSET_PATH, 'utf-8');
-      return parseCSVContent(content);
+      return parseCSVContent(content, verbose);
     }
   } catch (error) {
     console.log(`Failed to read ${PROCEDURES_ASSET_PATH}:`, error.message);
@@ -128,8 +128,9 @@ function readCSV(filePath) {
 /**
  * Parse CSV content with semicolon delimiter
  * Now handles new format with timing-based complication columns
+ * Properly handles quoted fields containing semicolons
  */
-function parseCSVContent(content) {
+function parseCSVContent(content, verbose = false) {
   const lines = content.split('\n');
   const procedures = [];
   
@@ -139,7 +140,7 @@ function parseCSVContent(content) {
       !headerLine.includes('Immediate / Intraoperative Complications') || 
       !headerLine.includes('Early Post-Operative Complications') || 
       !headerLine.includes('Late Post-Operative Complications')) {
-    console.error('CSV header does not match expected format');
+    console.error('CSV header does not match expected format "Procedure;Specialty;Immediate / Intraoperative Complications;Early Post-Operative Complications;Late Post-Operative Complications"');
     console.log('Actual header:', headerLine);
     return [];
   }
@@ -149,8 +150,25 @@ function parseCSVContent(content) {
     const line = lines[i].trim();
     if (!line) continue;
     
-    // Split by semicolon
-    const parts = line.split(';');
+    // Parse CSV line handling quoted fields
+    const parts = [];
+    let currentPart = '';
+    let inQuotes = false;
+    
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ';' && !inQuotes) {
+        parts.push(currentPart);
+        currentPart = '';
+      } else {
+        currentPart += char;
+      }
+    }
+    parts.push(currentPart); // Add the last part
+    
     if (parts.length >= 2) {
       const procedure = parts[0].trim();
       const specialty = parts[1].trim();
@@ -164,24 +182,27 @@ function parseCSVContent(content) {
         // Parse Immediate / Intraoperative Complications
         if (parts[2] && parts[2].trim()) {
           immediateComplications = parts[2].trim()
+            .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
             .split(';')
-            .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+            .map(c => c.trim()) // Trim whitespace from each complication
             .filter(c => c);
         }
         
         // Parse Early Post-Operative Complications
         if (parts[3] && parts[3].trim()) {
           earlyComplications = parts[3].trim()
+            .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
             .split(';')
-            .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+            .map(c => c.trim()) // Trim whitespace from each complication
             .filter(c => c);
         }
         
         // Parse Late Post-Operative Complications
         if (parts[4] && parts[4].trim()) {
           lateComplications = parts[4].trim()
+            .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
             .split(';')
-            .map(c => c.trim().replace(/^["']|["']$/g, '')) // Remove leading/trailing quotes
+            .map(c => c.trim()) // Trim whitespace from each complication
             .filter(c => c);
         }
       }
@@ -430,11 +451,11 @@ async function fetchPubMedCitations(procedure, verbose = false) {
 /**
  * Create complication objects from complication names
  */
-function createComplicationObjects(complicationNames, category) {
+function createComplicationObjects(complicationNames) {
   return complicationNames.map((name, index) => ({
     id: `csv-${Date.now()}-${index}`,
     name: name,
-    description: `${name} - ${category}`,
+    description: name,
     category: 'Severe',
     source: 'Clinical Literature'
   }));
@@ -443,7 +464,7 @@ function createComplicationObjects(complicationNames, category) {
 /**
  * Enrich procedure with specific complications from CSV or fallback to baseline
  */
-function enrichProcedure(procedure, citations) {
+function enrichProcedure(procedure, citations, verbose = false) {
   let complications;
   
   // Check if CSV has specific complication data
@@ -451,13 +472,19 @@ function enrichProcedure(procedure, citations) {
       procedure.earlyComplications && procedure.earlyComplications.length > 0 ||
       procedure.lateComplications && procedure.lateComplications.length > 0) {
     // Use CSV-specific complications
+    if (verbose) {
+      console.log(`  Using CSV-specific complications for ${procedure.procedure}`);
+    }
     complications = {
-      '1. Immediate / Intraoperative Complications': createComplicationObjects(procedure.immediateComplications || [], 'Immediate'),
-      '2. Early Post-Operative Complications': createComplicationObjects(procedure.earlyComplications || [], 'Early'),
-      '3. Late / Long-Term Complications': createComplicationObjects(procedure.lateComplications || [], 'Late')
+      '1. Immediate / Intraoperative Complications': createComplicationObjects(procedure.immediateComplications || []),
+      '2. Early Post-Operative Complications': createComplicationObjects(procedure.earlyComplications || []),
+      '3. Late / Long-Term Complications': createComplicationObjects(procedure.lateComplications || [])
     };
   } else {
     // Use universal baseline as fallback
+    if (verbose) {
+      console.log(`  Using universal baseline complications for ${procedure.procedure}`);
+    }
     complications = universalBaselineComplications;
   }
   
@@ -477,7 +504,7 @@ async function preindexProcedures() {
   console.log('Starting PubMed citation pre-indexing...');
   
   // Read procedures from CSV
-  const procedures = readCSV(PROCEDURES_CSV_PATH);
+  const procedures = readCSV(PROCEDURES_CSV_PATH, false);
   
   if (procedures.length === 0) {
     console.error('No procedures found in CSV file');
@@ -520,7 +547,7 @@ async function preindexProcedures() {
         successCount++;
       }
       
-      const enriched = enrichProcedure(procedure, citations);
+      const enriched = enrichProcedure(procedure, citations, true);
       enrichedProcedures.push(enriched);
     } catch (error) {
       errorCount++;
@@ -533,7 +560,7 @@ async function preindexProcedures() {
         source: 'PubMed Search',
         url: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(procedure.procedure + ' complications')}`
       }];
-      const enriched = enrichProcedure(procedure, fallbackCitations);
+      const enriched = enrichProcedure(procedure, fallbackCitations, true);
       enrichedProcedures.push(enriched);
     }
   }
