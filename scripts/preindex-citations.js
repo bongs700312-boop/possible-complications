@@ -449,16 +449,49 @@ async function fetchPubMedCitations(procedure, verbose = false) {
 }
 
 /**
+ * Helper function to parse complication strings with parentheses
+ */
+function parseComplication(complicationString) {
+  if (!complicationString) return { title: '', subtitle: '' };
+  
+  // Clean stray characters
+  const cleaned = complicationString
+    .replace(/^[-\s"]+|[-\s"]+$/g, '') // Remove leading/trailing dashes, spaces, quotes
+    .trim();
+  
+  // Check for parentheses
+  const parenMatch = cleaned.match(/^(.+?)\s*\((.+?)\)$/);
+  
+  if (parenMatch) {
+    const title = parenMatch[1].trim();
+    const subtitle = parenMatch[2].trim();
+    
+    // Avoid duplicate text
+    if (title.toLowerCase() === subtitle.toLowerCase()) {
+      return { title, subtitle: '' };
+    }
+    
+    return { title, subtitle };
+  }
+  
+  // No parentheses found
+  return { title: cleaned, subtitle: '' };
+}
+
+/**
  * Create complication objects from complication names
  */
 function createComplicationObjects(complicationNames) {
-  return complicationNames.map((name, index) => ({
-    id: `csv-${Date.now()}-${index}`,
-    name: name,
-    description: name,
-    category: 'Severe',
-    source: 'Clinical Literature'
-  }));
+  return complicationNames.map((name, index) => {
+    const { title, subtitle } = parseComplication(name);
+    return {
+      id: `csv-${Date.now()}-${index}`,
+      name: title,
+      description: subtitle || '',
+      category: 'Severe',
+      source: 'Clinical Literature'
+    };
+  });
 }
 
 /**

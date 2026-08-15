@@ -4,6 +4,34 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// Helper function to parse complication strings with parentheses
+const parseComplication = (complicationString) => {
+  if (!complicationString) return { title: '', subtitle: '' };
+  
+  // Clean stray characters
+  const cleaned = complicationString
+    .replace(/^[-\s"]+|[-\s"]+$/g, '') // Remove leading/trailing dashes, spaces, quotes
+    .trim();
+  
+  // Check for parentheses
+  const parenMatch = cleaned.match(/^(.+?)\s*\((.+?)\)$/);
+  
+  if (parenMatch) {
+    const title = parenMatch[1].trim();
+    const subtitle = parenMatch[2].trim();
+    
+    // Avoid duplicate text
+    if (title.toLowerCase() === subtitle.toLowerCase()) {
+      return { title, subtitle: '' };
+    }
+    
+    return { title, subtitle };
+  }
+  
+  // No parentheses found
+  return { title: cleaned, subtitle: '' };
+};
+
 // Try to import preindexed data, handle if file doesn't exist
 let preindexedProcedures = [];
 try {
@@ -1567,13 +1595,16 @@ export default function PossibleComplications() {
         
         // Create complication objects from CSV data
         const createComplicationObjects = (complicationNames) => {
-          return complicationNames.map((name, index) => ({
-            id: `csv-${Date.now()}-${index}`,
-            name: name,
-            description: name,
-            category: 'Severe',
-            source: 'Clinical Literature'
-          }));
+          return complicationNames.map((name, index) => {
+            const { title, subtitle } = parseComplication(name);
+            return {
+              id: `csv-${Date.now()}-${index}`,
+              name: title,
+              description: subtitle || '',
+              category: 'Severe',
+              source: 'Clinical Literature'
+            };
+          });
         };
         
         // Create PubMed search citation for CSV procedures
@@ -1812,12 +1843,15 @@ export default function PossibleComplications() {
           return `
             <div class="category-section">
               <div class="category-title category-${categoryClass}">${category} (${items.length})</div>
-              ${items.map(comp => `
+              ${items.map(comp => {
+                const { title, subtitle } = parseComplication(comp.name);
+                return `
                 <div class="complication">
-                  <div class="complication-name">${comp.name}</div>
-                  <div class="complication-desc">${comp.description}</div>
+                  <div class="complication-name">${title}</div>
+                  ${subtitle ? `<div class="complication-desc">${subtitle}</div>` : ''}
                 </div>
-              `).join('')}
+              `;
+              }).join('')}
             </div>
           `;
         }).join('')}
@@ -2201,8 +2235,15 @@ This list is provided by your doctor to help you understand potential risks befo
                                 </View>
                               </View>
                               <View style={styles.complicationContent}>
-                                <Text style={styles.complicationName}>{complication.name}</Text>
-                                <Text style={styles.complicationDescription}>{complication.description}</Text>
+                                {(() => {
+                                  const { title, subtitle } = parseComplication(complication.name);
+                                  return (
+                                    <>
+                                      <Text style={styles.complicationName}>{title}</Text>
+                                      {subtitle && <Text style={styles.complicationDescription}>{subtitle}</Text>}
+                                    </>
+                                  );
+                                })()}
                               </View>
                             </TouchableOpacity>
                           ))}
