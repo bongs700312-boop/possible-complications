@@ -17,7 +17,7 @@ const MAX_PROCEDURES_TO_PROCESS = parseInt(process.env.MAX_PROCEDURES) || Number
 const REQUEST_DELAY_MS = 800; // 800ms delay between requests (conservative rate limiting)
 const PROGRESS_LOG_INTERVAL = 50; // Log progress every 50 procedures
 
-// Universal baseline complications (timing-based)
+// Universal baseline complications (timing-based) - used as fallback when CSV doesn't have specific data
 const universalBaselineComplications = {
   '1. Immediate / Intraoperative Complications': [
     {
@@ -77,7 +77,7 @@ const universalBaselineComplications = {
       source: 'PubMed Literature'
     }
   ],
-  '3. Late Post-Operative Complications': [
+  '3. Late / Long-Term Complications': [
     {
       name: 'Chronic Pain',
       description: 'Long-term pain at the procedure site',
@@ -127,6 +127,7 @@ function readCSV(filePath) {
 
 /**
  * Parse CSV content with semicolon delimiter
+ * Now handles new format with timing-based complication columns
  */
 function parseCSVContent(content) {
   const lines = content.split('\n');
@@ -140,9 +141,37 @@ function parseCSVContent(content) {
     // Split by semicolon
     const parts = line.split(';');
     if (parts.length >= 2) {
+      const procedure = parts[0].trim();
+      const specialty = parts[1].trim();
+      
+      // Parse complication columns if they exist (new format)
+      let immediateComplications = [];
+      let earlyComplications = [];
+      let lateComplications = [];
+      
+      if (parts.length >= 5) {
+        // Parse Immediate / Intraoperative Complications
+        if (parts[2] && parts[2].trim()) {
+          immediateComplications = parts[2].trim().split(';').map(c => c.trim()).filter(c => c);
+        }
+        
+        // Parse Early Post-Operative Complications
+        if (parts[3] && parts[3].trim()) {
+          earlyComplications = parts[3].trim().split(';').map(c => c.trim()).filter(c => c);
+        }
+        
+        // Parse Late Post-Operative Complications
+        if (parts[4] && parts[4].trim()) {
+          lateComplications = parts[4].trim().split(';').map(c => c.trim()).filter(c => c);
+        }
+      }
+      
       procedures.push({
-        procedure: parts[0].trim(),
-        specialty: parts[1].trim()
+        procedure: procedure,
+        specialty: specialty,
+        immediateComplications: immediateComplications,
+        earlyComplications: earlyComplications,
+        lateComplications: lateComplications
       });
     }
   }
@@ -293,13 +322,43 @@ async function fetchPubMedCitations(procedure, verbose = false) {
 }
 
 /**
- * Enrich procedure with baseline complications and citations
+ * Create complication objects from complication names
+ */
+function createComplicationObjects(complicationNames, category) {
+  return complicationNames.map((name, index) => ({
+    id: `csv-${Date.now()}-${index}`,
+    name: name,
+    description: `${name} - ${category}`,
+    category: 'Severe',
+    source: 'Clinical Literature'
+  }));
+}
+
+/**
+ * Enrich procedure with specific complications from CSV or fallback to baseline
  */
 function enrichProcedure(procedure, citations) {
+  let complications;
+  
+  // Check if CSV has specific complication data
+  if (procedure.immediateComplications && procedure.immediateComplications.length > 0 ||
+      procedure.earlyComplications && procedure.earlyComplications.length > 0 ||
+      procedure.lateComplications && procedure.lateComplications.length > 0) {
+    // Use CSV-specific complications
+    complications = {
+      '1. Immediate / Intraoperative Complications': createComplicationObjects(procedure.immediateComplications || [], 'Immediate'),
+      '2. Early Post-Operative Complications': createComplicationObjects(procedure.earlyComplications || [], 'Early'),
+      '3. Late / Long-Term Complications': createComplicationObjects(procedure.lateComplications || [], 'Late')
+    };
+  } else {
+    // Use universal baseline as fallback
+    complications = universalBaselineComplications;
+  }
+  
   return {
     name: procedure.procedure,
     specialty: procedure.specialty,
-    complications: universalBaselineComplications,
+    complications: complications,
     citations: citations,
     lastUpdated: new Date().toISOString()
   };

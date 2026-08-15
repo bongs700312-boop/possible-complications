@@ -1,6 +1,7 @@
+import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Try to import preindexed data, handle if file doesn't exist
@@ -517,7 +518,7 @@ const categoryComplicationTemplates = {
     { name: 'Post-Operative Respiratory Failure', description: 'Inability to breathe adequately without mechanical support', category: 'Severe' },
     { name: 'Atelectasis', description: 'Partial lung collapse due to shallow breathing after surgery', category: 'Severe' },
     { name: 'Post-Operative Pneumonia', description: 'Lung infection developing after surgery due to prolonged bed rest', category: 'Severe' },
-    // 3. Late Post-Operative Complications (months to years)
+    // 3. Late / Long-Term Complications (months to years)
     { name: 'Chronic Pain', description: 'Long-term pain at incision site or in head region', category: 'Severe' },
     { name: 'Nerve Entrapment', description: 'Nerves trapped in scar tissue causing chronic discomfort', category: 'Severe' },
     { name: 'Long-Term Neurological Deficits', description: 'Permanent weakness, paralysis, or loss of sensation in body parts', category: 'Severe' },
@@ -542,7 +543,7 @@ const categoryComplicationTemplates = {
     { name: 'Early Wound Dehiscence or Acute Bleeding', description: 'Wound separation or sudden bleeding requiring intervention in first 30 days', category: 'Severe' },
     { name: 'Post-Operative Respiratory Failure', description: 'Breathing difficulties after surgery due to anesthesia effects', category: 'Severe' },
     { name: 'Sepsis', description: 'Whole-body infection spreading from surgical site', category: 'Severe' },
-    // 3. Late Post-Operative Complications (months to years)
+    // 3. Late / Long-Term Complications (months to years)
     { name: 'Chronic Pain', description: 'Long-term pain in the affected area despite healing', category: 'Severe' },
     { name: 'Nerve Entrapment', description: 'Nerves trapped in scar tissue causing chronic discomfort', category: 'Severe' },
     { name: 'Permanent Nerve Damage', description: 'Permanent injury to nerves causing loss of sensation or movement', category: 'Severe' },
@@ -661,7 +662,7 @@ const categoryComplicationTemplates = {
     { name: 'Mediastinitis', description: 'Infection in the chest cavity requiring long-term antibiotics', category: 'Severe' },
     { name: 'Sepsis', description: 'Whole-body infection spreading from surgical site', category: 'Severe' },
     { name: 'Acute Kidney Injury', description: 'Kidney damage during or after heart surgery', category: 'Severe' },
-    // 3. Late Post-Operative Complications (months to years)
+    // 3. Late / Long-Term Complications (months to years)
     { name: 'Incisional Hernia Formation', description: 'Bulge at chest incision site developing months to years after surgery', category: 'Severe' },
     { name: 'Chronic Pain', description: 'Long-term pain at chest incision site', category: 'Severe' },
     { name: 'Nerve Entrapment', description: 'Nerves trapped in scar tissue causing chronic discomfort', category: 'Severe' },
@@ -711,7 +712,7 @@ const categoryComplicationTemplates = {
     { name: 'Peritonitis', description: 'Infection of abdominal lining requiring emergency treatment', category: 'Severe' },
     { name: 'Sepsis', description: 'Whole-body infection spreading from abdominal infection', category: 'Severe' },
     { name: 'Anastomotic Leak', description: 'Leakage from where intestines were reconnected in first 30 days', category: 'Severe' },
-    // 3. Late Post-Operative Complications (months to years)
+    // 3. Late / Long-Term Complications (months to years)
     { name: 'Incisional Hernia Formation', description: 'Bulge at incision site developing months to years after surgery requiring repair', category: 'Severe' },
     { name: 'Adhesion Bowel Obstruction', description: 'Scar tissue forming in abdomen causing bowel blockage years later', category: 'Severe' },
     { name: 'Chronic Pain', description: 'Long-term pain at incision site or in abdomen', category: 'Severe' },
@@ -738,7 +739,7 @@ const categoryComplicationTemplates = {
     { name: 'Urosepsis', description: 'Severe infection spreading from urinary tract to bloodstream', category: 'Severe' },
     { name: 'Sepsis', description: 'Whole-body infection requiring intensive care', category: 'Severe' },
     { name: 'Acute Kidney Injury', description: 'Worsening kidney function after surgery', category: 'Severe' },
-    // 3. Late Post-Operative Complications (months to years)
+    // 3. Late / Long-Term Complications (months to years)
     { name: 'Incisional Hernia Formation', description: 'Bulge at incision site developing months to years after surgery', category: 'Severe' },
     { name: 'Chronic Pain', description: 'Long-term pain at incision site or in flank area', category: 'Severe' },
     { name: 'Nerve Entrapment', description: 'Nerves trapped in scar tissue causing chronic discomfort', category: 'Severe' },
@@ -811,7 +812,7 @@ const categoryComplicationTemplates = {
     { name: 'Post-Operative Respiratory Failure', description: 'Breathing problems after extensive joint surgery', category: 'Severe' },
     { name: 'Atelectasis', description: 'Partial lung collapse due to shallow breathing after surgery', category: 'Severe' },
     { name: 'Sepsis', description: 'Whole-body infection spreading from joint infection', category: 'Severe' },
-    // 3. Late Post-Operative Complications (months to years)
+    // 3. Late / Long-Term Complications (months to years)
     { name: 'Incisional Hernia Formation', description: 'Bulge at incision site developing months to years after surgery', category: 'Severe' },
     { name: 'Chronic Pain', description: 'Long-term pain at joint site', category: 'Severe' },
     { name: 'Nerve Entrapment', description: 'Nerves trapped in scar tissue causing chronic discomfort', category: 'Severe' },
@@ -945,7 +946,7 @@ const organizeComplicationsByCategory = (complications) => {
   const categories = {
     '1. Immediate / Intraoperative Complications': [],
     '2. Early Post-Operative Complications': [],
-    '3. Late Post-Operative Complications': []
+    '3. Late / Long-Term Complications': []
   };
 
   complications.forEach(comp => {
@@ -980,11 +981,11 @@ const organizeComplicationsByCategory = (complications) => {
              name.includes('long-term') || name.includes('recurrence') || name.includes('re-operation') ||
              name.includes('permanent') || name.includes('dysfunction') || name.includes('persistent') ||
              description.includes('months') || description.includes('years') || description.includes('late')) {
-      categories['3. Late Post-Operative Complications'].push(comp);
+      categories['3. Late / Long-Term Complications'].push(comp);
     }
     // Default to Late Post-Operative for procedure-specific complications that don't fit elsewhere
     else {
-      categories['3. Late Post-Operative Complications'].push(comp);
+      categories['3. Late / Long-Term Complications'].push(comp);
     }
   });
 
@@ -1080,10 +1081,10 @@ const parseCSVContent = (content) => {
       return [];
     }
 
-    // Validate header row
+    // Validate header row - should now include complication columns
     const headerLine = lines[0].trim();
     if (!headerLine.includes('Procedure') || !headerLine.includes('Specialty')) {
-      console.error('CSV header does not match expected format "Procedure;Specialty"');
+      console.error('CSV header does not match expected format "Procedure;Specialty;Immediate / Intraoperative Complications;Early Post-Operative Complications;Late Post-Operative Complications"');
       console.log('Actual header:', headerLine);
       return [];
     }
@@ -1096,22 +1097,47 @@ const parseCSVContent = (content) => {
       // Split by semicolon
       const parts = line.split(';');
       
-      // Ensure we have at least 2 columns
+      // Ensure we have at least 2 columns (old format) or 5 columns (new format)
       if (parts.length >= 2) {
         const procedure = parts[0].trim();
         const specialty = parts[1].trim();
         
-        // Only add if both fields have content
-        if (procedure && specialty) {
+        // Parse complication columns if they exist (new format)
+        let immediateComplications = [];
+        let earlyComplications = [];
+        let lateComplications = [];
+        
+        if (parts.length >= 5) {
+          // Parse Immediate / Intraoperative Complications
+          if (parts[2] && parts[2].trim()) {
+            immediateComplications = parts[2].trim().split(';').map(c => c.trim()).filter(c => c);
+          }
+          
+          // Parse Early Post-Operative Complications
+          if (parts[3] && parts[3].trim()) {
+            earlyComplications = parts[3].trim().split(';').map(c => c.trim()).filter(c => c);
+          }
+          
+          // Parse Late Post-Operative Complications
+          if (parts[4] && parts[4].trim()) {
+            lateComplications = parts[4].trim().split(';').map(c => c.trim()).filter(c => c);
+          }
+        }
+        
+        // Only add if procedure has content
+        if (procedure) {
           procedures.push({
             procedure: procedure,
-            specialty: specialty
+            specialty: specialty || '',
+            immediateComplications,
+            earlyComplications,
+            lateComplications
           });
         }
       }
     }
     
-    console.log(`Parsed ${procedures.length} procedures from CSV`);
+    console.log(`Parsed ${procedures.length} procedures from CSV with complication data`);
     return procedures;
   } catch (error) {
     console.error('Error parsing CSV content:', error);
@@ -1224,7 +1250,7 @@ const majorSurgicalFallback = [
   { id: 13, name: 'Atelectasis', description: 'Partial lung collapse due to shallow breathing after surgery', category: 'Severe', source: 'Medscape Medical Review' },
   { id: 14, name: 'Post-Operative Pneumonia', description: 'Lung infection after surgery requiring antibiotics', category: 'Severe', source: 'UpToDate Guidelines' },
   { id: 15, name: 'Sepsis', description: 'Whole-body infection spreading from surgical site', category: 'Severe', source: 'Mayo Clinic Clinical Reference' },
-  // 3. Late Post-Operative Complications (months to years)
+  // 3. Late / Long-Term Complications (months to years)
   { id: 16, name: 'Incisional Hernia Formation', description: 'Bulge at incision site developing months to years after surgery requiring repair', category: 'Severe', source: 'PubMed Literature' },
   { id: 17, name: 'Adhesion Bowel Obstruction', description: 'Scar tissue forming causing bowel blockage years later', category: 'Severe', source: 'Medscape Medical Review' },
   { id: 18, name: 'Chronic Pain', description: 'Long-term pain at surgery site', category: 'Severe', source: 'UpToDate Guidelines' },
@@ -1319,8 +1345,8 @@ const ensureAllTimingCategories = (complications) => {
   }
 
   // For Late Post-Operative: Add universal fallbacks if empty
-  if (categorized['3. Late Post-Operative Complications'].length === 0) {
-    categorized['3. Late Post-Operative Complications'] = universalLateFallbacks.map((comp, index) => ({
+  if (categorized['3. Late / Long-Term Complications'].length === 0) {
+    categorized['3. Late / Long-Term Complications'] = universalLateFallbacks.map((comp, index) => ({
       ...comp,
       id: `universal-late-${Date.now()}-${index}`
     }));
@@ -1337,7 +1363,7 @@ export default function PossibleComplications() {
   const [complications, setComplications] = useState({
     '1. Immediate / Intraoperative Complications': [],
     '2. Early Post-Operative Complications': [],
-    '3. Late Post-Operative Complications': []
+    '3. Late / Long-Term Complications': []
   });
   const [patientName, setPatientName] = useState('');
   const [surgeonName, setSurgeonName] = useState('');
@@ -1347,11 +1373,28 @@ export default function PossibleComplications() {
   const [isSearchHovered, setIsSearchHovered] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [csvProcedures, setCsvProcedures] = useState([]);
 
   // Note: CSV loading is now handled by preindexed data from src/data/preindexed_procedures.json
   // This useEffect can be removed or kept for future CSV fallback if needed
   useEffect(() => {
     console.log(`Using preindexed procedures data: ${Array.isArray(preindexedProcedures) ? preindexedProcedures.length : 0} procedures loaded`);
+  }, []);
+
+  // Load CSV procedures on component mount
+  useEffect(() => {
+    const loadCSVData = async () => {
+      try {
+        const csvData = await loadProcedureComplicationsCSV();
+        console.log(`Loaded ${csvData.length} procedures from CSV with complication data`);
+        setCsvProcedures(csvData);
+      } catch (error) {
+        console.warn('Failed to load CSV data:', error.message);
+        setCsvProcedures([]);
+      }
+    };
+    
+    loadCSVData();
   }, []);
 
   // Update suggestions when search query changes
@@ -1417,6 +1460,7 @@ export default function PossibleComplications() {
     console.log(`Searching for procedure: "${normalizedQuery}"`);
     console.log(`Comprehensive database keys: ${Object.keys(comprehensiveClinicalDatabase).join(', ')}`);
     console.log(`Preindexed procedures count: ${Array.isArray(preindexedProcedures) ? preindexedProcedures.length : 0}`);
+    console.log(`CSV procedures count: ${csvProcedures.length}`);
 
     let foundComplications = null;
     let foundCitations = null;
@@ -1461,9 +1505,45 @@ export default function PossibleComplications() {
       }
     }
 
-    // Step 3: Only show fallback if BOTH lookups fail
+    // Step 3: Check CSV procedures with complication data
+    if (!foundComplications && csvProcedures.length > 0) {
+      console.log(`Searching CSV procedures for: "${normalizedQuery}"`);
+      const csvMatch = csvProcedures.find(p => {
+        const matches = matchesProcedureName(p.procedure, normalizedQuery);
+        console.log(`  Checking CSV: "${p.procedure}" == "${normalizedQuery}" ? ${matches}`);
+        return matches;
+      });
+      
+      if (csvMatch) {
+        console.log(`✓ Found match in CSV procedures: "${csvMatch.procedure}"`);
+        
+        // Create complication objects from CSV data
+        const createComplicationObjects = (complicationNames, category) => {
+          return complicationNames.map((name, index) => ({
+            id: `csv-${Date.now()}-${index}`,
+            name: name,
+            description: `${name} - ${category}`,
+            category: 'Severe',
+            source: 'Clinical Literature'
+          }));
+        };
+        
+        foundComplications = {
+          '1. Immediate / Intraoperative Complications': createComplicationObjects(csvMatch.immediateComplications || [], 'Immediate'),
+          '2. Early Post-Operative Complications': createComplicationObjects(csvMatch.earlyComplications || [], 'Early'),
+          '3. Late / Long-Term Complications': createComplicationObjects(csvMatch.lateComplications || [], 'Late')
+        };
+      }
+    }
+
+    // Step 4: Only show fallback if ALL lookups fail
     if (!foundComplications) {
-      console.log(`✗ No match found in either database, using generic fallback for: "${normalizedQuery}"`);
+      console.warn(`⚠️ FALLBACK TRIGGERED: No specific complications found for "${query}" (normalized: "${normalizedQuery}")`);
+      console.warn(`⚠️ This procedure is using generic template data instead of procedure-specific complications`);
+      console.warn(`⚠️ Consider adding this procedure to comprehensiveClinicalDatabase or preindexed_procedures.json`);
+      console.warn(`⚠️ Available comprehensiveClinicalDatabase keys: ${Object.keys(comprehensiveClinicalDatabase).slice(0, 10).join(', ')}...`);
+      console.warn(`⚠️ Available preindexedProcedures count: ${Array.isArray(preindexedProcedures) ? preindexedProcedures.length : 0}`);
+      
       const fallbackProfile = getFallbackProfile(query);
       foundComplications = fallbackProfile.map(comp => ({
         ...comp,
@@ -1475,11 +1555,11 @@ export default function PossibleComplications() {
     let finalComplications;
     
     if (foundComplications['1. Immediate / Intraoperative Complications']) {
-      // Already categorized (from preindexed data)
+      // Already categorized (from preindexed data or CSV)
       finalComplications = {
         '1. Immediate / Intraoperative Complications': foundComplications['1. Immediate / Intraoperative Complications'] || [],
         '2. Early Post-Operative Complications': foundComplications['2. Early Post-Operative Complications'] || [],
-        '3. Late Post-Operative Complications': foundComplications['3. Late Post-Operative Complications'] || [],
+        '3. Late / Long-Term Complications': foundComplications['3. Late / Long-Term Complications'] || [],
         citations: foundCitations || []
       };
     } else {
@@ -1541,7 +1621,7 @@ export default function PossibleComplications() {
     setComplications({
       '1. Immediate / Intraoperative Complications': [],
       '2. Early Post-Operative Complications': [],
-      '3. Late Post-Operative Complications': []
+      '3. Late / Long-Term Complications': []
     });
     setSelectedItems([]);
     
@@ -1562,7 +1642,7 @@ export default function PossibleComplications() {
     switch (category) {
       case '1. Immediate / Intraoperative Complications': return '#D32F2F';
       case '2. Early Post-Operative Complications': return '#F57C00';
-      case '3. Late Post-Operative Complications': return '#1976D2';
+      case '3. Late / Long-Term Complications': return '#1976D2';
       default: return '#757575';
     }
   };
@@ -1660,7 +1740,7 @@ export default function PossibleComplications() {
           const categoryClassMap = {
             '1. Immediate / Intraoperative Complications': '1-immediate-intraoperative-complications',
             '2. Early Post-Operative Complications': '2-early-post-operative-complications',
-            '3. Late Post-Operative Complications': '3-late-post-operative-complications'
+            '3. Late / Long-Term Complications': '3-late-post-operative-complications'
           };
           const categoryClass = categoryClassMap[category] || '1-immediate-intraoperative-complications';
           return `
@@ -1801,7 +1881,7 @@ This list is provided by your doctor to help you understand potential risks befo
     setComplications({
       '1. Immediate / Intraoperative Complications': [],
       '2. Early Post-Operative Complications': [],
-      '3. Late Post-Operative Complications': []
+      '3. Late / Long-Term Complications': []
     });
     setCurrentProcedure('');
     setPatientName('');
@@ -2014,7 +2094,7 @@ This list is provided by your doctor to help you understand potential risks befo
                   </View>
                 ) : (complications['1. Immediate / Intraoperative Complications'].length === 0 && 
                       complications['2. Early Post-Operative Complications'].length === 0 && 
-                      complications['3. Late Post-Operative Complications'].length === 0) ? (
+                      complications['3. Late / Long-Term Complications'].length === 0) ? (
                   <View style={styles.noResults}>
                     <Text style={styles.noResultsText}>No complications found for this procedure</Text>
                   </View>
@@ -2064,23 +2144,7 @@ This list is provided by your doctor to help you understand potential risks befo
                       );
                     })}
                     
-                    {/* Render citations section if available */}
-                    {complications.citations && complications.citations.length > 0 && (
-                      <View style={styles.citationSection}>
-                        <Text style={styles.citationTitle}>PubMed Literature Citations (NIH/NLM)</Text>
-                        {complications.citations.map((citation, index) => (
-                          <TouchableOpacity
-                            key={`citation-${index}`}
-                            style={styles.citationItem}
-                            onPress={() => Linking.openURL(citation.url)}
-                          >
-                            <Text style={styles.citationTitleText}>{citation.title}</Text>
-                            <Text style={styles.citationSource}>{citation.pubDate} • {citation.source}</Text>
-                            <Text style={styles.citationLink}>View on PubMed (PMID: {citation.pmid})</Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
+
                   </>
                 )}
               </>
