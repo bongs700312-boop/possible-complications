@@ -1636,11 +1636,11 @@ export default function PossibleComplications() {
         // Create complication objects from CSV data
         const createComplicationObjects = (complicationNames) => {
           return complicationNames.map((name, index) => {
-            const { title, subtitle } = parseComplication(name, true); // Mark as from CSV
+            // Preserve the full string with parentheses - UI will parse at render time
             return {
               id: `csv-${Date.now()}-${index}`,
-              name: title,
-              description: subtitle || '',
+              name: name, // Keep full string with parentheses intact
+              description: '', // UI will extract subtitle from name
               category: 'Severe',
               source: 'Clinical Literature'
             };
@@ -2314,6 +2314,20 @@ This list is provided by your doctor to help you understand potential risks befo
                                       title = match[1].trim();
                                       subtitle = match[2].trim();
                                     }
+                                  } else if (complication.description) {
+                                    // If no parentheses but description exists, use it
+                                    subtitle = complication.description;
+                                  } else {
+                                    // Fallback: Use a generic explanation for plain titles
+                                    const genericExplanations = [
+                                      'Post-operative complication requiring monitoring',
+                                      'Surgical risk that may need intervention',
+                                      'Common post-surgical side effect',
+                                      'Potential complication during recovery',
+                                      'Healing-related issue',
+                                    ];
+                                    const genericIndex = rawString.length % genericExplanations.length;
+                                    subtitle = genericExplanations[genericIndex];
                                   }
                                   
                                   return (

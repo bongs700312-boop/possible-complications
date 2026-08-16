@@ -516,11 +516,11 @@ function parseComplication(complicationString, fromCSV = false) {
  */
 function createComplicationObjects(complicationNames) {
   return complicationNames.map((name, index) => {
-    const { title, subtitle } = parseComplication(name, true); // Mark as from CSV
+    // Preserve the full string with parentheses - UI will parse at render time
     return {
       id: `csv-${Date.now()}-${index}`,
-      name: title,
-      description: subtitle || '',
+      name: name, // Keep full string with parentheses intact
+      description: '', // UI will extract subtitle from name
       category: 'Severe',
       source: 'Clinical Literature'
     };
