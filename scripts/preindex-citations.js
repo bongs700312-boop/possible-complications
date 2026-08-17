@@ -288,6 +288,7 @@ function fetchAPIWithTimeout(url, timeout) {
 
 /**
  * Extract key words from procedure name for relevance validation
+ * Prioritizes anatomical terms and specific procedure types
  */
 function extractKeyWords(procedure) {
   // Remove common surgical terms and suffixes
@@ -303,40 +304,76 @@ function extractKeyWords(procedure) {
     'primary', 'secondary', 'revision', 'emergency', 'elective',
     'minimal', 'invasive', 'open', 'laparoscopic', 'endoscopic', 'percutaneous',
     'transcatheter', 'endovascular', 'robotic', 'assisted', 'computer-assisted',
-    'with', 'and', 'for', 'of', 'in', 'on', 'at', 'by', 'or'
+    'with', 'and', 'for', 'of', 'in', 'on', 'at', 'by', 'or',
+    'using', 'utilizing', 'case', 'series', 'study', 'analysis', 'review',
+    'following', 'after', 'during', 'before', 'without', 'versus', 'vs'
+  ];
+  
+  // Anatomical terms that should be preserved
+  const anatomicalTerms = [
+    'knee', 'hip', 'shoulder', 'elbow', 'wrist', 'ankle', 'spine', 'neck',
+    'heart', 'lung', 'liver', 'kidney', 'brain', 'eye', 'ear', 'nose', 'throat',
+    'stomach', 'intestine', 'colon', 'bladder', 'uterus', 'prostate', 'breast',
+    'thyroid', 'pancreas', 'gallbladder', 'spleen', 'appendix', 'tonsil', 'adenoid',
+    'trachea', 'esophagus', 'aorta', 'coronary', 'carotid', 'femoral', 'tibial',
+    'radial', 'ulnar', 'median', 'sciatic', 'facial', 'trigeminal', 'optic',
+    'cranial', 'spinal', 'cervical', 'thoracic', 'lumbar', 'sacral', 'pelvic',
+    'abdominal', 'facial', 'dental', 'oral', 'maxillofacial', 'ophthalmic',
+    'otolaryngologic', 'gynecologic', 'urologic', 'neurologic', 'cardiovascular',
+    'pulmonary', 'gastrointestinal', 'hepatic', 'renal', 'vascular', 'orthopedic'
   ];
   
   // Split procedure name into words
   const words = procedure.toLowerCase()
     .replace(/[^\w\s-]/g, ' ') // Remove special characters except hyphens
     .split(/\s+/)
-    .filter(word => word.length > 2 && !stopWords.includes(word));
+    .filter(word => word.length > 2);
   
-  // If no meaningful words found, return the first few original words
-  if (words.length === 0) {
-    return procedure.toLowerCase()
-      .split(/\s+/)
-      .slice(0, 3)
-      .filter(word => word.length > 2);
+  // Prioritize anatomical terms
+  const keyWords = [];
+  
+  // First, add any anatomical terms found
+  for (const word of words) {
+    if (anatomicalTerms.includes(word) && !keyWords.includes(word)) {
+      keyWords.push(word);
+    }
   }
   
-  return words;
+  // Then, add other meaningful words (not stop words)
+  for (const word of words) {
+    if (!stopWords.includes(word) && !keyWords.includes(word)) {
+      keyWords.push(word);
+    }
+  }
+  
+  // If no meaningful words found, return the first few original words
+  if (keyWords.length === 0) {
+    return words.slice(0, 3);
+  }
+  
+  // Return at most 4 key words to avoid over-matching
+  return keyWords.slice(0, 4);
 }
 
 /**
  * Check if article title is relevant to the procedure
+ * Requires at least 2 key words to match for better specificity
  */
 function isArticleRelevant(articleTitle, procedureKeyWords) {
   const titleLower = articleTitle.toLowerCase();
   
-  // Check if at least one key word from procedure appears in the title
+  // If procedure has 3+ key words, require at least 2 to match
+  // If procedure has 1-2 key words, require at least 1 to match
+  const requiredMatches = procedureKeyWords.length >= 3 ? 2 : 1;
+  
+  let matchCount = 0;
   for (const keyWord of procedureKeyWords) {
     if (titleLower.includes(keyWord)) {
-      return true;
+      matchCount++;
     }
   }
   
-  return false;
+  return matchCount >= requiredMatches;
 }
 
 /**

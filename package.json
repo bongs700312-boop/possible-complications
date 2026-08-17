@@ -3,7 +3,10 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
     "@expo/ui": "~57.0.8",
+    "csv-parser": "^3.2.1",
+    "csv-writer": "^1.6.0",
     "expo": "~57.0.9",
     "expo-asset": "^57.0.8",
     "expo-constants": "~57.0.8",

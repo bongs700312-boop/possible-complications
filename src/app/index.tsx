@@ -547,25 +547,6 @@ const comprehensiveClinicalDatabase = {
     { id: 7, name: 'Oral Nerve Damage', description: 'Nerve injury causing prolonged numbness', category: 'Severe', source: 'Medscape Medical Review' },
     { id: 8, name: 'Tissue Necrosis', description: 'Poor healing of gum tissue', category: 'Severe', source: 'Medline Resource' },
   ],
-  'tooth extraction': [
-    { id: 1, name: 'Bleeding', description: 'Normal bleeding from the extraction socket', category: 'Common', source: 'PubMed Literature' },
-    { id: 2, name: 'Pain', description: 'Pain at the extraction site', category: 'Common', source: 'Medscape Medical Review' },
-    { id: 3, name: 'Swelling', description: 'Swelling of the cheek or jaw area', category: 'Common', source: 'Medline Resource' },
-    { id: 4, name: 'Dry Socket', description: 'Painful condition when blood clot dislodges', category: 'Rare', source: 'UpToDate Guidelines' },
-    { id: 5, name: 'Infection', description: 'Infection in the extraction socket', category: 'Rare', source: 'Mayo Clinic Clinical Reference' },
-    { id: 6, name: 'Nerve Damage', description: 'Injury to nerves causing numbness in lip or tongue', category: 'Severe', source: 'PubMed Literature' },
-    { id: 7, name: 'Severe Bleeding', description: 'Excessive bleeding that requires medical attention', category: 'Severe', source: 'Medscape Medical Review' },
-    { id: 8, name: 'Jaw Fracture', description: 'Rare fracture of the jawbone during extraction', category: 'Severe', source: 'Medline Resource' },
-  ],
-  'extraction': [
-    { id: 1, name: 'Bleeding', description: 'Normal bleeding from the extraction site', category: 'Common', source: 'PubMed Literature' },
-    { id: 2, name: 'Pain', description: 'Pain at the extraction site', category: 'Common', source: 'Medscape Medical Review' },
-    { id: 3, name: 'Swelling', description: 'Swelling of the affected area', category: 'Common', source: 'Medline Resource' },
-    { id: 4, name: 'Dry Socket', description: 'Painful condition when blood clot dislodges', category: 'Rare', source: 'UpToDate Guidelines' },
-    { id: 5, name: 'Infection', description: 'Infection at the extraction site', category: 'Rare', source: 'Mayo Clinic Clinical Reference' },
-    { id: 6, name: 'Nerve Damage', description: 'Injury to nerves causing numbness', category: 'Severe', source: 'PubMed Literature' },
-    { id: 7, name: 'Severe Bleeding', description: 'Excessive bleeding requiring intervention', category: 'Severe', source: 'Medscape Medical Review' },
-  ],
 };
 
 // Category-based complication templates for CSV procedures with timing-based categories
@@ -1075,6 +1056,7 @@ const loadProcedureComplicationsCSV = async () => {
         if (response.ok) {
           const content = await response.text();
           console.log('CSV content loaded from public, length:', content.length);
+          console.log('First 500 chars of CSV:', content.substring(0, 500));
           
           // Check if content is HTML (error page) rather than CSV
           if (content.trim().toLowerCase().startsWith('<!doctype') || 
@@ -1197,34 +1179,43 @@ const parseCSVContent = (content) => {
         if (parts.length >= 5) {
           // Parse Immediate / Intraoperative Complications
           if (parts[2] && parts[2].trim()) {
-            immediateComplications = parts[2].trim()
-              .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
+            const immediateRaw = parts[2].trim().replace(/^"|"$/g, '');
+            immediateComplications = immediateRaw
               .split(';')
-              .map(c => c.trim()) // Trim whitespace from each complication
+              .map(c => c.trim())
               .filter(c => c);
+            console.log(`Immediate complications count for "${procedure}":`, immediateComplications.length);
           }
           
           // Parse Early Post-Operative Complications
           if (parts[3] && parts[3].trim()) {
-            earlyComplications = parts[3].trim()
-              .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
+            const earlyRaw = parts[3].trim().replace(/^"|"$/g, '');
+            earlyComplications = earlyRaw
               .split(';')
-              .map(c => c.trim()) // Trim whitespace from each complication
+              .map(c => c.trim())
               .filter(c => c);
+            console.log(`Early complications count for "${procedure}":`, earlyComplications.length);
           }
           
           // Parse Late Post-Operative Complications
           if (parts[4] && parts[4].trim()) {
-            lateComplications = parts[4].trim()
-              .replace(/^"|"$/g, '') // Remove leading/trailing quotes from entire column
+            const lateRaw = parts[4].trim().replace(/^"|"$/g, '');
+            lateComplications = lateRaw
               .split(';')
-              .map(c => c.trim()) // Trim whitespace from each complication
+              .map(c => c.trim())
               .filter(c => c);
+            console.log(`Late complications count for "${procedure}":`, lateComplications.length);
           }
         }
         
         // Only add if procedure has content
         if (procedure) {
+          if (procedure.toLowerCase() === 'tooth extraction') {
+            console.log(`🔍 DEBUG: Parsed tooth extraction - Immediate: ${immediateComplications.length}, Early: ${earlyComplications.length}, Late: ${lateComplications.length}`);
+            console.log(`🔍 DEBUG: Immediate items:`, immediateComplications);
+            console.log(`🔍 DEBUG: Early items:`, earlyComplications);
+            console.log(`🔍 DEBUG: Late items:`, lateComplications);
+          }
           procedures.push({
             procedure: procedure,
             specialty: specialty || '',
@@ -1565,74 +1556,73 @@ export default function PossibleComplications() {
     let foundComplications = null;
     let foundCitations = null;
 
-    // Helper function to check if query matches a procedure name using simple .includes() logic
-    const matchesProcedureName = (procedureName, query) => {
+    // Helper function to check if query matches a procedure name
+    // Returns: 2 for exact match, 1 for partial match, 0 for no match
+    const getMatchScore = (procedureName, query) => {
       const normalizedName = procedureName.toLowerCase().trim();
       const normalizedQuery = query.toLowerCase().trim();
-      
-      // Simple matching: if either string contains the other, it's a match
-      return normalizedName.includes(normalizedQuery) || normalizedQuery.includes(normalizedName);
+
+      // Exact match - highest priority
+      if (normalizedName === normalizedQuery) {
+        return 2;
+      }
+
+      // Partial match - lower priority
+      if (normalizedName.includes(normalizedQuery) || normalizedQuery.includes(normalizedName)) {
+        return 1;
+      }
+
+      return 0;
     };
 
-    // Step 1: Check comprehensiveClinicalDatabase using the lowercased string
-    if (comprehensiveClinicalDatabase[normalizedQuery]) {
-      console.log(`✓ Found exact match in comprehensiveClinicalDatabase: "${normalizedQuery}"`);
-      foundComplications = comprehensiveClinicalDatabase[normalizedQuery];
-      // Add PubMed search citation for comprehensive database matches
-      foundCitations = [{
-        pmid: null,
-        title: `Search PubMed for "${query} Complications"`,
-        pubDate: 'N/A',
-        source: 'PubMed Search',
-        url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(query)}"+complications`
-      }];
-    } else {
-      // Check for slash-separated names in comprehensive database
-      for (const [procedure, complications] of Object.entries(comprehensiveClinicalDatabase)) {
-        if (matchesProcedureName(procedure, normalizedQuery)) {
-          console.log(`✓ Found match in comprehensiveClinicalDatabase (with slash handling): "${procedure}"`);
-          foundComplications = complications;
-          // Add PubMed search citation for comprehensive database matches
-          foundCitations = [{
-            pmid: null,
-            title: `Search PubMed for "${query} Complications"`,
-            pubDate: 'N/A',
-            source: 'PubMed Search',
-            url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(query)}"+complications`
-          }];
-          break;
+    // Step 1: Check preindexedProcedures first (has timing-category data)
+    // Prioritize exact matches over partial matches
+    if (Array.isArray(preindexedProcedures) && preindexedProcedures.length > 0) {
+      console.log(`Searching preindexedProcedures for: "${normalizedQuery}"`);
+      let bestMatch = null;
+      let bestScore = 0;
+
+      for (const p of preindexedProcedures) {
+        const score = getMatchScore(p.name, normalizedQuery);
+        console.log(`  Checking: "${p.name}" == "${normalizedQuery}" ? score=${score}`);
+        if (score > bestScore && p.complications) {
+          bestScore = score;
+          bestMatch = p;
         }
       }
-    }
 
-    // Step 2: If not found, loop through preindexedProcedures and perform case-insensitive match on .name property
-    if (!foundComplications && Array.isArray(preindexedProcedures) && preindexedProcedures.length > 0) {
-      console.log(`Searching preindexedProcedures for: "${normalizedQuery}"`);
-      const preindexedMatch = preindexedProcedures.find(p => {
-        const matches = matchesProcedureName(p.name, normalizedQuery);
-        console.log(`  Checking: "${p.name}" == "${normalizedQuery}" ? ${matches}`);
-        return matches;
-      });
-      
-      if (preindexedMatch && preindexedMatch.complications) {
-        console.log(`✓ Found match in preindexedProcedures: "${preindexedMatch.name}"`);
-        foundComplications = preindexedMatch.complications;
-        foundCitations = preindexedMatch.citations || [];
+      // Only accept partial matches if we don't have an exact match
+      // This prevents generic terms like "arthroplasty" from matching specific procedures
+      if (bestMatch && bestScore >= 2) {
+        console.log(`✓ Found exact match in preindexedProcedures: "${bestMatch.name}"`);
+        foundComplications = bestMatch.complications;
+        foundCitations = bestMatch.citations || [];
+      } else if (bestMatch && bestScore === 1) {
+        console.log(`⚠ Found partial match in preindexedProcedures: "${bestMatch.name}" (score=1) - skipping to check CSV`);
+        // Don't use partial matches - let CSV check happen instead
       }
     }
 
-    // Step 3: Check CSV procedures with complication data
+    // Step 2: Check CSV procedures with complication data (has timing-category data)
+    // Also prioritize exact matches over partial matches
     if (!foundComplications && csvProcedures.length > 0) {
       console.log(`Searching CSV procedures for: "${normalizedQuery}"`);
-      const csvMatch = csvProcedures.find(p => {
-        const matches = matchesProcedureName(p.procedure, normalizedQuery);
-        console.log(`  Checking CSV: "${p.procedure}" == "${normalizedQuery}" ? ${matches}`);
-        return matches;
-      });
-      
-      if (csvMatch) {
-        console.log(`✓ Found match in CSV procedures: "${csvMatch.procedure}"`);
-        
+      let bestMatch = null;
+      let bestScore = 0;
+
+      for (const p of csvProcedures) {
+        const score = getMatchScore(p.procedure, normalizedQuery);
+        console.log(`  Checking CSV: "${p.procedure}" == "${normalizedQuery}" ? score=${score}`);
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = p;
+        }
+      }
+
+      // Accept exact matches or good partial matches from CSV
+      if (bestMatch && bestScore >= 1) {
+        console.log(`✓ Found match in CSV procedures: "${bestMatch.procedure}" (score=${bestScore})`);
+
         // Create complication objects from CSV data
         const createComplicationObjects = (complicationNames) => {
           return complicationNames.map((name, index) => {
@@ -1646,21 +1636,68 @@ export default function PossibleComplications() {
             };
           });
         };
-        
+
         // Create PubMed search citation for CSV procedures
         foundCitations = [{
           pmid: null,
-          title: `Search PubMed for "${csvMatch.procedure} Complications"`,
+          title: `Search PubMed for "${bestMatch.procedure} Complications"`,
           pubDate: 'N/A',
           source: 'PubMed Search',
-          url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(csvMatch.procedure)}"+complications`
+          url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(bestMatch.procedure)}"+complications`
         }];
-        
+
         foundComplications = {
-          '1. Immediate / Intraoperative Complications': createComplicationObjects(csvMatch.immediateComplications || []),
-          '2. Early Post-Operative Complications': createComplicationObjects(csvMatch.earlyComplications || []),
-          '3. Late / Long-Term Complications': createComplicationObjects(csvMatch.lateComplications || [])
+          '1. Immediate / Intraoperative Complications': createComplicationObjects(bestMatch.immediateComplications || []),
+          '2. Early Post-Operative Complications': createComplicationObjects(bestMatch.earlyComplications || []),
+          '3. Late / Long-Term Complications': createComplicationObjects(bestMatch.lateComplications || [])
         };
+      }
+    }
+
+    // Step 3: Only check comprehensiveClinicalDatabase if preindexed/CSV not found
+    // This ensures procedure-specific timing-category data takes priority over generic flat data
+    if (!foundComplications) {
+      let bestMatch = null;
+      let bestScore = 0;
+      let bestKey = null;
+
+      // Check exact match first
+      if (comprehensiveClinicalDatabase[normalizedQuery]) {
+        console.log(`✓ Found exact match in comprehensiveClinicalDatabase: "${normalizedQuery}"`);
+        foundComplications = comprehensiveClinicalDatabase[normalizedQuery];
+        // Add PubMed search citation for comprehensive database matches
+        foundCitations = [{
+          pmid: null,
+          title: `Search PubMed for "${query} Complications"`,
+          pubDate: 'N/A',
+          source: 'PubMed Search',
+          url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(query)}"+complications`
+        }];
+      } else {
+        // Check for partial matches in comprehensive database
+        for (const [procedure, complications] of Object.entries(comprehensiveClinicalDatabase)) {
+          const score = getMatchScore(procedure, normalizedQuery);
+          if (score > bestScore) {
+            bestScore = score;
+            bestMatch = complications;
+            bestKey = procedure;
+          }
+        }
+
+        // Only use comprehensive database if we have a good match
+        // Avoid using generic terms like "arthroplasty" for specific procedures
+        if (bestMatch && bestScore >= 1) {
+          console.log(`✓ Found match in comprehensiveClinicalDatabase: "${bestKey}" (score=${bestScore})`);
+          foundComplications = bestMatch;
+          // Add PubMed search citation for comprehensive database matches
+          foundCitations = [{
+            pmid: null,
+            title: `Search PubMed for "${query} Complications"`,
+            pubDate: 'N/A',
+            source: 'PubMed Search',
+            url: `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(query)}"+complications`
+          }];
+        }
       }
     }
 
